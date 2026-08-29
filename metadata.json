@@ -1,0 +1,6 @@
+{
+  "name": "سامانه حسابداری و خدمات پس از فروش",
+  "description": "سامانه یکپارچه و جامع حسابداری، صدور فاکتور خرید و فروش، انبارداری و مدیریت خدمات پس از فروش و گارانتی دیاکو الکترونیک.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

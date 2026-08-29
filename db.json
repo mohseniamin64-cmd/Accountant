@@ -1,0 +1,380 @@
+{
+  "isSetupCompleted": true,
+  "users": [
+    {
+      "id": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "fullName": "مدیر کل سیستم",
+      "username": "admin",
+      "passwordHash": "b43e4df9824c8f2b381f8817ffcdf807:dde07aed87c0cf95007eb546c2a0b1b84ef9f59be397f717619d9800d0dc5dd579d27896db095ede5ebd34354686c0cf044394ec350d1827bdbacea47be74665",
+      "role": "admin",
+      "isActive": true,
+      "isRootAdmin": true,
+      "lastLoginDate": "2026-08-12T14:18:36.847Z"
+    }
+  ],
+  "warrantyDb": [],
+  "sales": [],
+  "customers": [],
+  "products": [],
+  "suppliers": [],
+  "purchases": [],
+  "inventory": [],
+  "auditLog": [
+    {
+      "id": "9f25d1fd-c2a5-42db-babe-0ec39c5ffa2c",
+      "at": "2026-08-12T14:18:16.673Z",
+      "userId": null,
+      "username": "system",
+      "role": "system",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "LOGIN_FAILED",
+      "entity": "auth",
+      "details": {
+        "username": "admin"
+      }
+    },
+    {
+      "id": "878daf15-3fcc-4733-8cc7-9bf17e48db03",
+      "at": "2026-08-12T14:18:31.795Z",
+      "userId": null,
+      "username": "system",
+      "role": "system",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "SETUP_COMPLETED",
+      "entity": "system",
+      "details": {
+        "username": "admin"
+      }
+    },
+    {
+      "id": "2dc5c600-48b8-48ab-b13f-acf825c1a4a5",
+      "at": "2026-08-12T14:18:36.848Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "LOGIN_SUCCESS",
+      "entity": "auth",
+      "details": {}
+    },
+    {
+      "id": "f6302e93-5166-42b2-b0fd-84b6c5368bb4",
+      "at": "2026-08-12T14:18:37.651Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "9301b293-01cd-4581-94a5-235de9543e16",
+      "at": "2026-08-12T14:18:38.076Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "b67ff650-8b17-4000-860a-b7fe438ff061",
+      "at": "2026-08-12T14:19:36.990Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "1bc37a25-285b-4101-92d5-3884a5d3303c",
+      "at": "2026-08-12T14:19:41.238Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "b42b21b2-ed6e-4228-a0a4-586354b48c5b",
+      "at": "2026-08-12T14:20:41.245Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "9db15bd8-fcd8-410d-8cae-8ab83474a7df",
+      "at": "2026-08-12T14:21:21.320Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "dc2ae7b6-f435-4061-9863-041214a70093",
+      "at": "2026-08-12T14:21:21.747Z",
+      "userId": "1757642b-6095-4b42-8724-60b0c7d3f40e",
+      "username": "admin",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "action": "STATE_UPDATED",
+      "entity": "database",
+      "details": {
+        "keys": [
+          "setupCompanyName",
+          "setupCompanyEnName",
+          "setupServerName",
+          "setupServerIp",
+          "setupCurrency",
+          "setupWarrantyDuration",
+          "setupMaxStayDays",
+          "warrantyDb",
+          "sales",
+          "customers",
+          "products",
+          "suppliers",
+          "purchases",
+          "inventory"
+        ]
+      }
+    },
+    {
+      "id": "9199a00b-7cd8-472d-86dd-c97a3843d8fe",
+      "at": "2026-08-12T14:24:07.776Z",
+      "userId": null,
+      "username": "system",
+      "role": "system",
+      "ip": "127.0.0.1",
+      "userAgent": "node",
+      "action": "LOGIN_FAILED",
+      "entity": "auth",
+      "details": {
+        "username": "admin"
+      }
+    },
+    {
+      "id": "75a23d6d-b5da-44b3-bcbc-5a0933d0dbeb",
+      "at": "2026-08-12T14:24:26.665Z",
+      "userId": null,
+      "username": "system",
+      "role": "system",
+      "ip": "127.0.0.1",
+      "userAgent": "node",
+      "action": "LOGIN_FAILED",
+      "entity": "auth",
+      "details": {
+        "username": "admin"
+      }
+    },
+    {
+      "id": "fe36d239-e23a-46ea-9461-3685d206aaac",
+      "at": "2026-08-12T14:25:01.785Z",
+      "userId": null,
+      "username": "system",
+      "role": "system",
+      "ip": "127.0.0.1",
+      "userAgent": "node",
+      "action": "LOGIN_FAILED",
+      "entity": "auth",
+      "details": {
+        "username": "admin"
+      }
+    },
+    {
+      "id": "3e866732-7214-460e-87ac-ca54d4ed4b73",
+      "at": "2026-08-12T14:25:08.012Z",
+      "userId": null,
+      "username": "system",
+      "role": "system",
+      "ip": "127.0.0.1",
+      "userAgent": "node",
+      "action": "LOGIN_FAILED",
+      "entity": "auth",
+      "details": {
+        "username": "admin"
+      }
+    }
+  ],
+  "setupCompanyName": "دیاکو الکترونیک",
+  "setupCompanyEnName": "Diaco Electronics",
+  "setupServerName": "Diaco-Server",
+  "setupServerIp": "192.168.1.100",
+  "setupCurrency": "تومان",
+  "setupWarrantyDuration": "12 ماه",
+  "setupMaxStayDays": "15 روز",
+  "bankAccounts": [
+    {
+      "id": "BNK-101",
+      "bankName": "بانک ملت",
+      "accountHolder": "دیاکو الکترونیک (مدیر ارشد)",
+      "accountNumber": "8841029311",
+      "cardNumber": "6104-3378-9012-4450",
+      "shebaNumber": "IR80 0120 0000 0008 8410 2931 10",
+      "branchName": "شعبه مرکزی ولیعصر - کد 6512",
+      "accountType": "جاری",
+      "balance": 145000000,
+      "currency": "تومان",
+      "isActive": true,
+      "posConnected": true,
+      "notes": "حساب اصلی دریافت وجوه فروش و کارتخوان فروشگاه",
+      "createdAt": "۱۴۰۵/۰۱/۱۰"
+    },
+    {
+      "id": "BNK-102",
+      "bankName": "بانک سامان",
+      "accountHolder": "شرکت دیاکو الکترونیک پارس",
+      "accountNumber": "810-800-4590123-1",
+      "cardNumber": "6219-8610-4490-1122",
+      "shebaNumber": "IR45 0560 0810 8000 4590 1230 01",
+      "branchName": "شعبه میرداماد - کد 810",
+      "accountType": "قرض‌الحسنه",
+      "balance": 82000000,
+      "currency": "تومان",
+      "isActive": true,
+      "posConnected": false,
+      "notes": "حساب پرداخت تسویه‌حساب تأمین‌کنندگان و خرید قطعات",
+      "createdAt": "۱۴۰۵/۰۱/۱۵"
+    },
+    {
+      "id": "BNK-103",
+      "bankName": "بانک پاسارگاد",
+      "accountHolder": "صندوق تنخواه‌گردان کارگاه دیاکو",
+      "accountNumber": "210-9012-14050-1",
+      "cardNumber": "5022-2910-3344-9876",
+      "shebaNumber": "IR92 0570 0210 9012 1405 0000 01",
+      "branchName": "شعبه مطهری - کد 210",
+      "accountType": "کوتاه مدت",
+      "balance": 28500000,
+      "currency": "تومان",
+      "isActive": true,
+      "posConnected": true,
+      "notes": "تنخواه کارگاه تعمیرات و هزینه‌های جاری قطعات مصرفی",
+      "createdAt": "۱۴۰۵/۰۲/۰۱"
+    }
+  ]
+}

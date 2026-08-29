@@ -1,11 +1,35 @@
 <div align="center">
-
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-
-  <h1>Built with AI Studio</h2>
-
-  <p>The fastest path from prompt to production with Gemini.</p>
-
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
+
+# سامانه مدیریت گارانتی و تعمیرات دیاکو
+
+این نسخه برای اجرای داخلی روی یک کامپیوتر سرور و دسترسی گوشی‌ها و رایانه‌های کارگاه از طریق شبکه محلی آماده شده است.
+
+View your app in AI Studio: https://ai.studio/apps/3c3d4f66-d192-4514-b9ec-92f30c7d579a
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. برنامه را اجرا کنید:
+   `npm run dev`
+3. در اولین اجرا، مدیر کل و رمز امن را از صفحه راه‌اندازی تعریف کنید. رمز باید حداقل ۸ نویسه و شامل حرف بزرگ، حرف کوچک و عدد باشد.
+4. روی کامپیوتر سرور IP ثابت تنظیم کنید. سایر دستگاه‌های همان شبکه برنامه را با نشانی `http://IP-SERVER:3000` باز می‌کنند.
+
+## امنیت
+
+- رمزها با `scrypt` و Salt تصادفی ذخیره می‌شوند و متن رمز در دیتابیس قرار نمی‌گیرد.
+- نشست ورود در Cookie امن و HttpOnly نگهداری می‌شود و پس از ۱۰ دقیقه بی‌کاری پایان می‌یابد.
+- پس از پنج ورود ناموفق، تلاش بعدی ۱۵ دقیقه مسدود می‌شود.
+- API اطلاعات بدون ورود قابل خواندن یا تغییر نیست.
+- ایجاد کاربر، تغییر نقش و بازنشانی رمز فقط برای مدیر مجاز است.
+- رخدادهای ورود و تغییرات مهم در `auditLog` ثبت می‌شوند.
+
+## بررسی نسخه نهایی
+
+- بررسی TypeScript: `npm run lint`
+- ساخت نسخه عملیاتی: `npm run build`
