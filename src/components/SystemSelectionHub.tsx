@@ -3,190 +3,104 @@ import { motion } from 'motion/react';
 import { 
   Calculator, 
   ShieldCheck, 
-  Coins, 
-  ShoppingCart, 
+  Receipt, 
   ShoppingBag, 
-  Users, 
-  FileText, 
   Landmark, 
-  Wrench, 
   Search, 
-  PlusCircle, 
-  Activity, 
-  ArrowLeft, 
+  Wrench, 
   CheckCircle2, 
-  Database, 
-  Sparkles, 
-  Layers, 
-  Cpu,
-  PackageCheck,
-  TrendingUp,
-  Clock,
-  BarChart3
+  ArrowLeft
 } from 'lucide-react';
-import { ActiveTab, SystemModule, Customer, Product, WarrantyItem, SaleRecord, PurchaseRecord, InventoryItem, BankAccount } from '../types';
+import { ActiveTab, Customer, Product, WarrantyItem, BankAccount } from '../types';
 
 interface SystemSelectionHubProps {
   onSelectSystem: (system: 'accounting' | 'services', defaultTab?: ActiveTab) => void;
-  customers: Customer[];
-  products: Product[];
-  warrantyDb: WarrantyItem[];
-  sales: any[];
-  purchases: any[];
-  inventory: any[];
+  customers?: Customer[];
+  products?: Product[];
+  warrantyDb?: WarrantyItem[];
+  sales?: any[];
+  purchases?: any[];
+  inventory?: any[];
   bankAccounts?: BankAccount[];
 }
 
 export const SystemSelectionHub: React.FC<SystemSelectionHubProps> = ({
-  onSelectSystem,
-  customers,
-  products,
-  warrantyDb,
-  sales,
-  purchases,
-  inventory,
-  bankAccounts = []
+  onSelectSystem
 }) => {
-  // Compute summary metrics from unified shared database
-  const totalCustomers = customers.length;
-  const totalProducts = products.length;
-  const totalInStock = inventory.filter(i => i.status === 'available').length;
-  const totalSales = sales.length;
-  const totalPurchases = purchases.length;
-  const activeRepairs = warrantyDb.filter(w => w.status === 'under_repair' || w.status === 'pending').length;
-  const completedRepairs = warrantyDb.filter(w => w.status === 'replaced' || w.status === 'active').length;
-
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      className="relative max-w-5xl mx-auto py-4 sm:py-8 space-y-6 sm:space-y-8 text-right select-none"
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.25 }}
+      className="max-w-4xl mx-auto py-3 sm:py-6 space-y-4 sm:space-y-6 text-right select-none"
       dir="rtl"
     >
-      {/* Faint Background Watermark Logo */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden opacity-[0.03]">
-        <svg 
-          className="w-[28rem] h-[28rem] sm:w-[36rem] sm:h-[36rem] text-slate-900" 
-          viewBox="0 0 200 200" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle cx="100" cy="100" r="92" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" />
-          <circle cx="100" cy="100" r="82" stroke="currentColor" strokeWidth="1.5" />
-          <polygon points="100,28 162,64 162,136 100,172 38,136 38,64" stroke="currentColor" strokeWidth="2.5" />
-          <path d="M 100 45 L 100 80 M 100 120 L 100 155" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          <path d="M 55 72 L 80 88 M 120 112 L 145 128" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          <path d="M 145 72 L 120 88 M 80 112 L 55 128" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="100" cy="100" r="16" stroke="currentColor" strokeWidth="2" />
-          <circle cx="100" cy="100" r="7" fill="currentColor" />
-        </svg>
+      {/* Top System Selection Header Banner */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs text-center relative overflow-hidden">
+        <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+          انتخاب سامانه
+        </h2>
       </div>
 
-      {/* Top Welcome & System Identification Banner */}
-      <div className="relative z-10 bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs relative overflow-hidden text-center">
-        {/* Subtle background glow */}
-        <div className="absolute -top-12 -left-12 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col items-center justify-center">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight text-center">
-            سامانه حسابداری و خدمات پس از فروش
-          </h2>
-        </div>
-      </div>
-
-      {/* TWO PRIMARY INTERACTIVE SYSTEM CARDS */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7">
+      {/* Two Primary System Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
         
         {/* CARD 1: ACCOUNTING & COMMERCIAL SYSTEM */}
         <motion.div 
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-          className="bg-white border-2 border-slate-200/90 hover:border-blue-500/80 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-xl hover:shadow-blue-500/10 transition-all flex flex-col justify-between group cursor-pointer relative overflow-hidden"
-          onClick={() => onSelectSystem('accounting', 'accounting_dashboard')}
+          whileHover={{ y: -2, transition: { duration: 0.15 } }}
+          className="bg-white border-2 border-slate-200/90 hover:border-blue-500/70 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md hover:shadow-blue-500/5 transition-all flex flex-col justify-between h-full relative overflow-hidden"
         >
-          {/* Subtle top decoration */}
-          <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 opacity-80" />
+          {/* Subtle Top Accent */}
+          <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-600" />
 
-          <div className="space-y-5">
-            {/* Header & Big Icon - Centered */}
-            <div className="flex flex-col items-center justify-center gap-3 pt-2">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <Calculator className="w-8 h-8" />
+          <div className="space-y-4">
+            {/* Header & Icon */}
+            <div className="flex flex-col items-center justify-center text-center space-y-2 pt-1">
+              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+                <Calculator className="w-7 h-7" />
               </div>
-              <h3 className="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors text-center">
-                سامانه حسابداری و بازرگانی
-              </h3>
-            </div>
-
-            {/* Feature Sub-list */}
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-bold text-slate-700">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                    <Coins className="w-4 h-4" />
-                  </div>
-                  <span>صدور فاکتورها (خرید، فروش، پیش‌فاکتور)</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <ShoppingBag className="w-4 h-4" />
-                  </div>
-                  <span>مدیریت کالا و انبار</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <span>طرف‌های حساب و اشخاص</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
-                    <Landmark className="w-4 h-4" />
-                  </div>
-                  <span>حساب‌های بانکی و چک</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <span>دفتر سوابق فاکتورها</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                    <BarChart3 className="w-4 h-4 text-indigo-600" />
-                  </div>
-                  <span>گزارشات هلو و سود</span>
-                </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900">
+                  سامانه حسابداری و بازرگانی
+                </h3>
+                <p className="text-xs font-bold text-slate-500 mt-1">
+                  مدیریت خرید، فروش، انبار و امور مالی
+                </p>
               </div>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-3 gap-2 text-center pt-1">
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold block">طرف‌حساب‌ها</span>
-                <span className="text-xs font-black text-slate-800 font-mono">{totalCustomers}</span>
-              </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold block">کالاهای انبار</span>
-                <span className="text-xs font-black text-slate-800 font-mono">{totalInStock}</span>
-              </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold block">فاکتورهای فروش</span>
-                <span className="text-xs font-black text-slate-800 font-mono">{totalSales}</span>
-              </div>
+            {/* 3 Core Features */}
+            <div className="bg-slate-50/90 border border-slate-100 rounded-xl sm:rounded-2xl p-3 sm:p-3.5">
+              <ul className="space-y-2.5 text-xs font-bold text-slate-700">
+                <li className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <Receipt className="w-3.5 h-3.5" />
+                  </div>
+                  <span>فاکتورهای خرید و فروش</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                  </div>
+                  <span>کالا، انبار و طرف‌حساب‌ها</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                    <Landmark className="w-3.5 h-3.5" />
+                  </div>
+                  <span>دریافت، پرداخت و گزارش‌های مالی</span>
+                </li>
+              </ul>
             </div>
           </div>
 
           {/* Action Button */}
-          <div className="pt-6 mt-4 border-t border-slate-100">
+          <div className="pt-4 sm:pt-5 mt-4 border-t border-slate-100">
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectSystem('accounting', 'accounting_dashboard');
-              }}
-              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer group-hover:shadow-lg"
+              onClick={() => onSelectSystem('accounting', 'accounting_dashboard')}
+              className="w-full py-3 sm:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer group"
             >
               <span>ورود به سامانه حسابداری</span>
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -196,94 +110,61 @@ export const SystemSelectionHub: React.FC<SystemSelectionHubProps> = ({
 
         {/* CARD 2: AFTER-SALES SERVICE & WARRANTY SYSTEM */}
         <motion.div 
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-          className="bg-white border-2 border-slate-200/90 hover:border-emerald-500/80 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-xl hover:shadow-emerald-500/10 transition-all flex flex-col justify-between group cursor-pointer relative overflow-hidden"
-          onClick={() => onSelectSystem('services', 'dashboard')}
+          whileHover={{ y: -2, transition: { duration: 0.15 } }}
+          className="bg-white border-2 border-slate-200/90 hover:border-emerald-500/70 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md hover:shadow-emerald-500/5 transition-all flex flex-col justify-between h-full relative overflow-hidden"
         >
-          {/* Subtle top decoration */}
-          <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-500 opacity-80" />
+          {/* Subtle Top Accent */}
+          <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-600" />
 
-          <div className="space-y-5">
-            {/* Header & Big Icon - Centered */}
-            <div className="flex flex-col items-center justify-center gap-3 pt-2">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-                <ShieldCheck className="w-8 h-8" />
+          <div className="space-y-4">
+            {/* Header & Icon */}
+            <div className="flex flex-col items-center justify-center text-center space-y-2 pt-1">
+              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+                <ShieldCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-lg font-black text-slate-900 group-hover:text-emerald-600 transition-colors text-center">
-                سامانه خدمات پس از فروش و گارانتی
-              </h3>
-            </div>
-
-            {/* Feature Sub-list */}
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-bold text-slate-700">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <Cpu className="w-4 h-4" />
-                  </div>
-                  <span>میز کار اصلی کارگاه</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                    <Search className="w-4 h-4" />
-                  </div>
-                  <span>استعلام سریع گارانتی</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                    <PlusCircle className="w-4 h-4" />
-                  </div>
-                  <span>پذیرش دستگاه و ثبت عیب</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                    <Wrench className="w-4 h-4" />
-                  </div>
-                  <span>صف تعمیرات و تکنسین‌ها</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                    <PackageCheck className="w-4 h-4" />
-                  </div>
-                  <span>تست نهایی کیفیت (QC)</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <span>تحویل و پرونده فنی دستگاه</span>
-                </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900">
+                  سامانه خدمات پس از فروش و گارانتی
+                </h3>
+                <p className="text-xs font-bold text-slate-500 mt-1">
+                  مدیریت پذیرش، تعمیر و تحویل دستگاه‌ها
+                </p>
               </div>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-3 gap-2 text-center pt-1">
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold block">کل پرونده‌ها</span>
-                <span className="text-xs font-black text-slate-800 font-mono">{warrantyDb.length}</span>
-              </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold block">در صف تعمیر</span>
-                <span className="text-xs font-black text-amber-600 font-mono">{activeRepairs}</span>
-              </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold block">تعمیر و تحویل شده</span>
-                <span className="text-xs font-black text-emerald-600 font-mono">{completedRepairs}</span>
-              </div>
+            {/* 3 Core Features */}
+            <div className="bg-slate-50/90 border border-slate-100 rounded-xl sm:rounded-2xl p-3 sm:p-3.5">
+              <ul className="space-y-2.5 text-xs font-bold text-slate-700">
+                <li className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Search className="w-3.5 h-3.5" />
+                  </div>
+                  <span>استعلام و پذیرش گارانتی</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                    <Wrench className="w-3.5 h-3.5" />
+                  </div>
+                  <span>مدیریت صف تعمیرات</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                  <span>تست نهایی، تسویه و تحویل</span>
+                </li>
+              </ul>
             </div>
           </div>
 
           {/* Action Button */}
-          <div className="pt-6 mt-4 border-t border-slate-100">
+          <div className="pt-4 sm:pt-5 mt-4 border-t border-slate-100">
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectSystem('services', 'dashboard');
-              }}
-              className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer group-hover:shadow-lg"
+              onClick={() => onSelectSystem('services', 'dashboard')}
+              className="w-full py-3 sm:py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer group"
             >
-              <span>ورود به سامانه خدمات و گارانتی</span>
+              <span>ورود به سامانه خدمات</span>
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             </button>
           </div>
