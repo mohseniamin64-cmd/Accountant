@@ -531,6 +531,7 @@ if (dbState.isSetupCompleted && !dbState.users?.some((user: any) => user.passwor
   dbState.users = [];
 }
 dbState.auditLog ||= [];
+dbState.boms ||= [];
 if (!dbState.bankAccounts || dbState.bankAccounts.length === 0) {
   dbState.bankAccounts = [
     {

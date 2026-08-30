@@ -2,28 +2,20 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Boxes, 
-  Layers, 
-  Cpu, 
+  FileText, 
+  Wrench, 
   Plus, 
   Search, 
   Edit3, 
-  Trash2, 
   CheckCircle2, 
   AlertTriangle, 
   X, 
-  FileText, 
-  Calculator, 
   ArrowRight, 
-  Wrench, 
-  Package, 
-  DollarSign, 
-  Percent, 
   Eye, 
   Printer, 
   Copy, 
-  Info,
-  ChevronDown,
-  Sparkles
+  Power,
+  Layers
 } from 'lucide-react';
 import { Product, BOMFormula, BOMComponent, ProductType, ActiveTab } from '../types';
 
@@ -32,7 +24,7 @@ interface ProductionUnitProps {
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   boms: BOMFormula[];
   setBoms: React.Dispatch<React.SetStateAction<BOMFormula[]>>;
-  setActiveTab: (tab: ActiveTab) => void;
+  setActiveTab?: (tab: ActiveTab) => void;
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   userRole?: string;
 }
@@ -43,8 +35,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
   boms,
   setBoms,
   setActiveTab,
-  showToast,
-  userRole = 'admin'
+  showToast
 }) => {
   // Navigation tabs within Production Unit
   const [activeSubTab, setActiveSubTab] = useState<'manufactured' | 'boms' | 'components'>('manufactured');
@@ -62,30 +53,40 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
 
   const [viewingBom, setViewingBom] = useState<BOMFormula | null>(null);
 
-  // Product form state
+  // Product form state (Strictly for manufactured products in subtab 1)
   const [prodFormName, setProdFormName] = useState('');
   const [prodFormModel, setProdFormModel] = useState('');
   const [prodFormCode, setProdFormCode] = useState('');
   const [prodFormCategory, setProdFormCategory] = useState('محصولات تولیدی');
-  const [prodFormType, setProdFormType] = useState<ProductType>('manufactured');
   const [prodFormUnit, setProdFormUnit] = useState('دستگاه');
   const [prodFormWarranty, setProdFormWarranty] = useState('12');
   const [prodFormSellingPrice, setProdFormSellingPrice] = useState('');
   const [prodFormDescription, setProdFormDescription] = useState('');
 
+  // Component form state (for Subtab 3: raw materials)
+  const [isComponentModalOpen, setIsComponentModalOpen] = useState(false);
+  const [editingComponentItem, setEditingComponentItem] = useState<Product | null>(null);
+  const [compFormName, setCompFormName] = useState('');
+  const [compFormCode, setCompFormCode] = useState('');
+  const [compFormType, setCompFormType] = useState<ProductType>('raw_material');
+  const [compFormUnit, setCompFormUnit] = useState('عدد');
+  const [compFormCost, setCompFormCost] = useState('');
+  const [compFormDescription, setCompFormDescription] = useState('');
+
   // BOM Form state
   const [bomFormTitle, setBomFormTitle] = useState('');
-  const [bomFormProductCode, setBomFormProductCode] = useState('');
+  const [bomFormTargetProdId, setBomFormTargetProdId] = useState('');
   const [bomFormVersion, setBomFormVersion] = useState('1.0');
   const [bomFormOutputQty, setBomFormOutputQty] = useState(1);
   const [bomFormOutputUnit, setBomFormOutputUnit] = useState('دستگاه');
   const [bomFormLaborCost, setBomFormLaborCost] = useState('');
   const [bomFormOverheadCost, setBomFormOverheadCost] = useState('');
   const [bomFormDescription, setBomFormDescription] = useState('');
+  const [bomFormIsActive, setBomFormIsActive] = useState(true);
   const [bomFormComponents, setBomFormComponents] = useState<BOMComponent[]>([]);
   const [bomFormError, setBomFormError] = useState('');
 
-  // Helper: format numbers in Persian or standard format
+  // Helper: format numbers in Persian
   const formatNum = (val: number | string | undefined): string => {
     if (val === undefined || val === null || val === '') return '۰';
     const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]+/g, '')) : val;
@@ -95,10 +96,25 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
 
   const parseNumberInput = (str: string): number => {
     if (!str) return 0;
-    // convert persian digits to english
     const enStr = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString()).replace(/,/g, '');
     const val = parseFloat(enStr);
     return isNaN(val) ? 0 : val;
+  };
+
+  // Helper: Format ISO date string into Persian readable date
+  const formatPersianDate = (isoStr?: string): string => {
+    if (!isoStr) return '—';
+    try {
+      const date = new Date(isoStr);
+      if (isNaN(date.getTime())) return isoStr;
+      return new Intl.DateTimeFormat('fa-IR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date);
+    } catch {
+      return isoStr;
+    }
   };
 
   // Helper: map product type to Persian label
@@ -115,33 +131,40 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
       case 'service':
         return { label: 'خدمت / اجرت', bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-300' };
       default:
-        return { label: 'محصول تولیدی', bg: 'bg-blue-100', text: 'text-blue-900', border: 'border-blue-300' };
+        return { label: 'نامشخص', bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-300' };
     }
   };
 
-  // List of manufactured products (or those with productType === 'manufactured' or by default)
+  // 1. Manufactured products strictly where productType === 'manufactured'
   const manufacturedProducts = useMemo(() => {
-    return products.filter(p => {
-      // If productType is explicitly specified
-      if (p.productType) {
-        return p.productType === 'manufactured';
-      }
-      // If category or model suggests manufactured product or default
-      return true;
-    });
+    return products.filter(p => p.productType === 'manufactured');
   }, [products]);
 
-  // List of raw materials / parts that can be used in BOM
+  // Active manufactured products (available for new BOM assignment)
+  const activeManufacturedProducts = useMemo(() => {
+    return manufacturedProducts.filter(p => p.isActive !== false);
+  }, [manufacturedProducts]);
+
+  // 2. Allowed components for BOM strictly: raw_material, purchased, consumable
   const rawMaterialProducts = useMemo(() => {
-    return products.filter(p => p.productType === 'raw_material' || p.productType === 'purchased' || p.productType === 'consumable');
+    return products.filter(p => 
+      p.productType === 'raw_material' || 
+      p.productType === 'purchased' || 
+      p.productType === 'consumable'
+    );
   }, [products]);
 
-  // Map product codes to active BOMs
-  const bomsByProductCode = useMemo(() => {
+  // Map product to active BOM (by finishedProductId or productCode)
+  const bomsByProduct = useMemo(() => {
     const map = new Map<string, BOMFormula>();
     boms.forEach(b => {
       if (b.isActive) {
-        map.set(b.productCode, b);
+        if (b.finishedProductId) {
+          map.set(b.finishedProductId, b);
+        }
+        if (b.productCode) {
+          map.set(b.productCode.trim().toLowerCase(), b);
+        }
       }
     });
     return map;
@@ -150,38 +173,43 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
   // Filtered manufactured products based on search & BOM status
   const filteredProducts = useMemo(() => {
     return manufacturedProducts.filter(p => {
+      const q = searchQuery.trim().toLowerCase();
       const matchesSearch = 
-        (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.model || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.code || '').toLowerCase().includes(searchQuery.toLowerCase());
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.model || '').toLowerCase().includes(q) ||
+        (p.code || '').toLowerCase().includes(q);
 
-      const hasBom = bomsByProductCode.has(p.code || p.model || '');
+      const hasBom = bomsByProduct.has(p.id) || (p.code ? bomsByProduct.has(p.code.trim().toLowerCase()) : false);
       if (bomFilter === 'has_bom' && !hasBom) return false;
       if (bomFilter === 'no_bom' && hasBom) return false;
 
       return matchesSearch;
     });
-  }, [manufacturedProducts, searchQuery, bomFilter, bomsByProductCode]);
+  }, [manufacturedProducts, searchQuery, bomFilter, bomsByProduct]);
 
   // Filtered BOMs
   const filteredBoms = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return boms.filter(b => {
       return (
-        (b.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (b.productName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (b.productCode || '').toLowerCase().includes(searchQuery.toLowerCase())
+        (b.title || '').toLowerCase().includes(q) ||
+        (b.productName || '').toLowerCase().includes(q) ||
+        (b.productCode || '').toLowerCase().includes(q) ||
+        (b.version || '').toLowerCase().includes(q)
       );
     });
   }, [boms, searchQuery]);
 
-  // Handle open add product modal
+  // ----------------------------------------------------
+  // MANUFACTURED PRODUCT ACTIONS (NO PHYSICAL DELETE)
+  // ----------------------------------------------------
+
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
     setProdFormName('');
     setProdFormModel('');
-    setProdFormCode(`PRD-${Math.floor(1000 + Math.random() * 9000)}`);
+    setProdFormCode('');
     setProdFormCategory('محصولات تولیدی');
-    setProdFormType('manufactured');
     setProdFormUnit('دستگاه');
     setProdFormWarranty('12');
     setProdFormSellingPrice('');
@@ -189,14 +217,12 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     setIsProductModalOpen(true);
   };
 
-  // Handle open edit product modal
   const handleOpenEditProduct = (prod: Product) => {
     setEditingProduct(prod);
     setProdFormName(prod.name || '');
     setProdFormModel(prod.model || '');
     setProdFormCode(prod.code || '');
     setProdFormCategory(prod.category || 'محصولات تولیدی');
-    setProdFormType(prod.productType || 'manufactured');
     setProdFormUnit(prod.unit || 'دستگاه');
     setProdFormWarranty(prod.warrantyDuration || '12');
     setProdFormSellingPrice(prod.sellingPrice || prod.suggestedPrice || '');
@@ -204,24 +230,41 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     setIsProductModalOpen(true);
   };
 
-  // Save product
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prodFormName.trim() || !prodFormCode.trim()) {
-      showToast('لطفاً نام و کد کالا را وارد نمایید.', 'error');
+    const trimmedName = prodFormName.trim();
+    const trimmedCode = prodFormCode.trim();
+
+    if (!trimmedName) {
+      showToast('نام محصول تولیدی الزامی است.', 'error');
+      return;
+    }
+    if (!trimmedCode) {
+      showToast('کد محصول الزامی است.', 'error');
+      return;
+    }
+
+    // Uniqueness validation across all products (trimmed, case-insensitive)
+    const duplicateCode = products.some(p => 
+      p.code?.trim().toLowerCase() === trimmedCode.toLowerCase() &&
+      (!editingProduct || p.id !== editingProduct.id)
+    );
+
+    if (duplicateCode) {
+      showToast('کد محصول واردشده قبلاً برای کالای دیگری ثبت شده است.', 'error');
       return;
     }
 
     if (editingProduct) {
       setProducts(prev => prev.map(p => {
-        if (p.id === editingProduct.id || (p.code && p.code === editingProduct.code)) {
+        if (p.id === editingProduct.id) {
           return {
             ...p,
-            name: prodFormName.trim(),
+            name: trimmedName,
             model: prodFormModel.trim(),
-            code: prodFormCode.trim(),
+            code: trimmedCode,
             category: prodFormCategory,
-            productType: prodFormType,
+            productType: 'manufactured',
             unit: prodFormUnit,
             warrantyDuration: prodFormWarranty,
             suggestedPrice: prodFormSellingPrice,
@@ -231,15 +274,15 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
         }
         return p;
       }));
-      showToast(`محصول «${prodFormName}» با موفقیت ویرایش شد.`, 'success');
+      showToast(`محصول تولیدی «${trimmedName}» با موفقیت ویرایش شد.`, 'success');
     } else {
       const newProd: Product = {
         id: `PROD-${Date.now()}`,
-        name: prodFormName.trim(),
+        name: trimmedName,
         model: prodFormModel.trim(),
-        code: prodFormCode.trim(),
+        code: trimmedCode,
         category: prodFormCategory,
-        productType: prodFormType,
+        productType: 'manufactured',
         unit: prodFormUnit,
         warrantyDuration: prodFormWarranty,
         suggestedPrice: prodFormSellingPrice,
@@ -248,39 +291,153 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
         isActive: true
       };
       setProducts(prev => [newProd, ...prev]);
-      showToast(`محصول تولیدی «${prodFormName}» با موفقیت تعریف شد.`, 'success');
+      showToast(`محصول تولیدی «${trimmedName}» با موفقیت ثبت گردید.`, 'success');
     }
 
     setIsProductModalOpen(false);
   };
 
-  // Delete product
-  const handleDeleteProduct = (id: string, name: string) => {
-    if (confirm(`آیا از حذف محصول «${name}» اطمینان دارید؟`)) {
-      setProducts(prev => prev.filter(p => p.id !== id));
-      showToast(`محصول «${name}» حذف گردید.`, 'info');
-    }
+  // Toggle active/inactive for manufactured product (Soft state instead of physical deletion)
+  const handleToggleProductActive = (product: Product) => {
+    const isCurrentlyActive = product.isActive !== false;
+    const confirmMessage = isCurrentlyActive
+      ? `آیا از غیرفعال‌سازی محصول تولیدی «${product.name}» اطمینان دارید؟ (سوابق و فرمول‌های ساخت آن حفظ می‌شوند)`
+      : `آیا از فعال‌سازی مجدد محصول تولیدی «${product.name}» اطمینان دارید؟`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: !isCurrentlyActive } : p));
+    showToast(
+      isCurrentlyActive ? `محصول «${product.name}» غیرفعال شد.` : `محصول «${product.name}» مجدداً فعال گردید.`,
+      isCurrentlyActive ? 'info' : 'success'
+    );
   };
 
-  // Handle open add BOM modal
+  // ----------------------------------------------------
+  // RAW MATERIAL / COMPONENT MODAL (SUBTAB 3)
+  // ----------------------------------------------------
+  const handleOpenAddComponent = () => {
+    setEditingComponentItem(null);
+    setCompFormName('');
+    setCompFormCode('');
+    setCompFormType('raw_material');
+    setCompFormUnit('عدد');
+    setCompFormCost('');
+    setCompFormDescription('');
+    setIsComponentModalOpen(true);
+  };
+
+  const handleOpenEditComponent = (item: Product) => {
+    setEditingComponentItem(item);
+    setCompFormName(item.name || '');
+    setCompFormCode(item.code || '');
+    setCompFormType(item.productType || 'raw_material');
+    setCompFormUnit(item.unit || 'عدد');
+    setCompFormCost(item.productionPrice || item.suggestedPrice || (item.price ? item.price.toString() : ''));
+    setCompFormDescription(item.description || '');
+    setIsComponentModalOpen(true);
+  };
+
+  const handleSaveComponent = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = compFormName.trim();
+    const trimmedCode = compFormCode.trim();
+
+    if (!trimmedName) {
+      showToast('نام قطعه / ماده اولیه الزامی است.', 'error');
+      return;
+    }
+    if (!trimmedCode) {
+      showToast('کد قطعه الزامی است.', 'error');
+      return;
+    }
+
+    const duplicateCode = products.some(p => 
+      p.code?.trim().toLowerCase() === trimmedCode.toLowerCase() &&
+      (!editingComponentItem || p.id !== editingComponentItem.id)
+    );
+
+    if (duplicateCode) {
+      showToast('کد کالا واردشده قبلاً ثبت شده است.', 'error');
+      return;
+    }
+
+    const costNum = parseNumberInput(compFormCost);
+
+    if (editingComponentItem) {
+      setProducts(prev => prev.map(p => {
+        if (p.id === editingComponentItem.id) {
+          return {
+            ...p,
+            name: trimmedName,
+            code: trimmedCode,
+            productType: compFormType,
+            unit: compFormUnit,
+            productionPrice: costNum > 0 ? `${costNum.toLocaleString('fa-IR')} تومان` : '',
+            price: costNum,
+            description: compFormDescription.trim()
+          };
+        }
+        return p;
+      }));
+      showToast(`قطعه «${trimmedName}» با موفقیت ویرایش شد.`, 'success');
+    } else {
+      const newComp: Product = {
+        id: `RAW-${Date.now()}`,
+        name: trimmedName,
+        code: trimmedCode,
+        category: 'قطعات و مواد اولیه',
+        productType: compFormType,
+        unit: compFormUnit,
+        productionPrice: costNum > 0 ? `${costNum.toLocaleString('fa-IR')} تومان` : '',
+        price: costNum,
+        description: compFormDescription.trim(),
+        isActive: true
+      };
+      setProducts(prev => [newComp, ...prev]);
+      showToast(`قطعه «${trimmedName}» با موفقیت به بانک اقلام افزوده شد.`, 'success');
+    }
+    setIsComponentModalOpen(false);
+  };
+
+  // Toggle active/inactive for raw material
+  const handleToggleComponentActive = (item: Product) => {
+    const isCurrentlyActive = item.isActive !== false;
+    const confirmMessage = isCurrentlyActive
+      ? `آیا از غیرفعال‌سازی قطعه «${item.name}» اطمینان دارید؟`
+      : `آیا از فعال‌سازی مجدد قطعه «${item.name}» اطمینان دارید؟`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setProducts(prev => prev.map(p => p.id === item.id ? { ...p, isActive: !isCurrentlyActive } : p));
+    showToast(isCurrentlyActive ? 'قطعه غیرفعال شد.' : 'قطعه مجدداً فعال گردید.', isCurrentlyActive ? 'info' : 'success');
+  };
+
+  // ----------------------------------------------------
+  // BOM ACTIONS (NO PHYSICAL DELETE, SINGLE ACTIVE RULE)
+  // ----------------------------------------------------
+
   const handleOpenAddBom = (targetProduct?: Product) => {
     setEditingBom(null);
-    const selectedProd = targetProduct || manufacturedProducts[0];
-    const initialCode = selectedProd ? (selectedProd.code || selectedProd.model || '') : '';
-    const initialName = selectedProd ? selectedProd.name : '';
-    const initialModel = selectedProd ? (selectedProd.model || '') : '';
+    const chosenProduct = targetProduct || activeManufacturedProducts[0] || manufacturedProducts[0];
+    
+    if (!chosenProduct) {
+      showToast('ابتدا باید حداقل یک محصول تولیدی تعریف نمایید.', 'error');
+      return;
+    }
 
-    setBomFormTitle(selectedProd ? `فرمول ساخت ${selectedProd.name}` : 'فرمول ساخت جدید');
-    setBomFormProductCode(initialCode);
+    setBomFormTargetProdId(chosenProduct.id);
+    setBomFormTitle(`فرمول ساخت استاندارد ${chosenProduct.name}`);
     setBomFormVersion('1.0');
     setBomFormOutputQty(1);
-    setBomFormOutputUnit(selectedProd?.unit || 'دستگاه');
-    setBomFormLaborCost('100,000');
-    setBomFormOverheadCost('100,000');
+    setBomFormOutputUnit(chosenProduct.unit || 'دستگاه');
+    setBomFormLaborCost('0');
+    setBomFormOverheadCost('0');
     setBomFormDescription('');
+    setBomFormIsActive(true);
     setBomFormError('');
 
-    // Default 2-3 components template
+    // Start with 1 empty component row
     setBomFormComponents([
       {
         id: `CMP-${Date.now()}-1`,
@@ -297,37 +454,85 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     setIsBomModalOpen(true);
   };
 
-  // Handle open edit BOM modal
   const handleOpenEditBom = (bom: BOMFormula) => {
     setEditingBom(bom);
+    
+    // Resolve matching product ID
+    const targetProd = products.find(p => p.id === bom.finishedProductId || p.code === bom.productCode);
+    setBomFormTargetProdId(targetProd?.id || bom.finishedProductId || '');
     setBomFormTitle(bom.title);
-    setBomFormProductCode(bom.productCode);
     setBomFormVersion(bom.version || '1.0');
     setBomFormOutputQty(bom.outputQuantity || 1);
     setBomFormOutputUnit(bom.outputUnit || 'دستگاه');
     setBomFormLaborCost(bom.laborCost ? bom.laborCost.toLocaleString('fa-IR') : '0');
     setBomFormOverheadCost(bom.overheadCost ? bom.overheadCost.toLocaleString('fa-IR') : '0');
     setBomFormDescription(bom.description || '');
-    setBomFormComponents(bom.components ? [...bom.components] : []);
+    setBomFormIsActive(bom.isActive);
+    setBomFormComponents(bom.components ? bom.components.map(c => ({ ...c })) : []);
     setBomFormError('');
     setIsBomModalOpen(true);
   };
 
-  // Duplicate BOM
+  // Duplicate BOM: Always creates as inactive copy to avoid conflicting active BOMs
   const handleDuplicateBom = (bom: BOMFormula) => {
+    const existingVersions = boms
+      .filter(b => (b.finishedProductId && b.finishedProductId === bom.finishedProductId) || b.productCode === bom.productCode)
+      .map(b => (b.version || '1.0').trim().toLowerCase());
+
+    let nextVer = `${bom.version || '1.0'}-copy`;
+    let counter = 1;
+    while (existingVersions.includes(nextVer.toLowerCase())) {
+      counter++;
+      nextVer = `${bom.version || '1.0'}-v${counter}`;
+    }
+
     const newBom: BOMFormula = {
       ...bom,
       id: `BOM-${Date.now()}`,
-      title: `${bom.title} (نسخه کپی)`,
-      version: `${(parseFloat(bom.version || '1.0') + 0.1).toFixed(1)}`,
-      createdAt: '۱۴۰۵/۰۴/۰۷',
-      components: bom.components.map(c => ({ ...c, id: `CMP-${Date.now()}-${Math.random().toString(36).substring(2, 6)}` }))
+      title: `${bom.title} (رونوشت)`,
+      version: nextVer,
+      isActive: false, // Must be inactive so duplicate doesn't violate single active BOM rule
+      createdAt: new Date().toISOString(),
+      updatedAt: undefined,
+      components: bom.components.map(c => ({
+        ...c,
+        id: `CMP-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+      }))
     };
+
     setBoms(prev => [newBom, ...prev]);
-    showToast(`نسخه جدید از فرمول «${bom.title}» ایجاد شد.`, 'success');
+    showToast(`رونوشت فرمول ساخت ایجاد شد (نسخه ${nextVer} در وضعیت غیرفعال).`, 'success');
   };
 
-  // Add component row in BOM Form
+  // Toggle active status of a BOM (Enforces ONE ACTIVE BOM PER PRODUCT)
+  const handleToggleBomActive = (bom: BOMFormula) => {
+    if (bom.isActive) {
+      if (!window.confirm(`آیا از غیرفعال‌سازی فرمول ساخت «${bom.title}» اطمینان دارید؟`)) return;
+      setBoms(prev => prev.map(b => b.id === bom.id ? { ...b, isActive: false, updatedAt: new Date().toISOString() } : b));
+      showToast(`فرمول ساخت «${bom.title}» غیرفعال شد.`, 'info');
+    } else {
+      if (!window.confirm(`با فعال‌سازی فرمول «${bom.title}»، سایر فرمول‌های این محصول غیرفعال می‌شوند. آیا ادامه می‌دهید؟`)) return;
+      
+      const targetId = bom.finishedProductId;
+      const targetCode = bom.productCode;
+
+      setBoms(prev => prev.map(b => {
+        const belongsToSameProduct = 
+          (targetId && b.finishedProductId === targetId) ||
+          (targetCode && b.productCode?.trim().toLowerCase() === targetCode.trim().toLowerCase());
+
+        if (b.id === bom.id) {
+          return { ...b, isActive: true, updatedAt: new Date().toISOString() };
+        } else if (belongsToSameProduct) {
+          return { ...b, isActive: false };
+        }
+        return b;
+      }));
+      showToast(`فرمول ساخت «${bom.title}» به عنوان فرمول فعال محصول تعیین گردید.`, 'success');
+    }
+  };
+
+  // Add component row in BOM form
   const handleAddComponentRow = () => {
     setBomFormComponents(prev => [
       ...prev,
@@ -344,7 +549,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     ]);
   };
 
-  // Remove component row
+  // Remove component row in BOM form
   const handleRemoveComponentRow = (id: string) => {
     if (bomFormComponents.length <= 1) {
       showToast('فرمول ساخت باید حداقل شامل یک قطعه یا ماده اولیه باشد.', 'error');
@@ -353,51 +558,65 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     setBomFormComponents(prev => prev.filter(c => c.id !== id));
   };
 
-  // Update component row field
-  const handleUpdateComponent = (id: string, field: keyof BOMComponent, value: any) => {
+  // Type-safe update of component text fields
+  const handleUpdateComponentText = (id: string, field: 'name' | 'code' | 'unit' | 'notes', value: string) => {
+    setBomFormComponents(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  };
+
+  // Type-safe update of component numeric fields
+  const handleUpdateComponentNumber = (id: string, field: 'quantity' | 'unitCost' | 'wastePercentage', value: number) => {
+    const cleanVal = isNaN(value) ? 0 : Math.max(0, value);
+    setBomFormComponents(prev => prev.map(c => c.id === id ? { ...c, [field]: cleanVal } : c));
+  };
+
+  // Auto-fill component from existing raw materials (Rule 9 & 10: Strict component types & uniqueness)
+  const handleSelectRawMaterial = (componentId: string, selectedProductId: string) => {
+    const found = products.find(p => p.id === selectedProductId || p.code === selectedProductId);
+    if (!found) return;
+
+    const targetProduct = products.find(p => p.id === bomFormTargetProdId);
+
+    // Guard: Circular dependency (Cannot add target product itself as a component)
+    if (targetProduct && (found.id === targetProduct.id || (found.code && found.code === targetProduct.code))) {
+      showToast('امکان انتخاب خود محصول نهایی به عنوان قطعه تشکیل‌دهنده وجود ندارد.', 'error');
+      return;
+    }
+
+    // Guard: Only raw_material, purchased, or consumable allowed
+    if (found.productType !== 'raw_material' && found.productType !== 'purchased' && found.productType !== 'consumable') {
+      showToast('تنها قطعات، مواد اولیه و کالاهای مصرفی قابل افزودن به فرمول هستند.', 'error');
+      return;
+    }
+
+    // Guard: Unique components in BOM
+    const alreadyExists = bomFormComponents.some(c => 
+      c.id !== componentId && 
+      ((c.productId && c.productId === found.id) || (c.code && found.code && c.code.trim().toLowerCase() === found.code.trim().toLowerCase()))
+    );
+
+    if (alreadyExists) {
+      showToast('این قطعه قبلاً به فرمول ساخت اضافه شده است. لطفاً تعداد آن را در ردیف قبلی افزایش دهید.', 'error');
+      return;
+    }
+
+    const cost = found.price || parseNumberInput(found.productionPrice || found.suggestedPrice || '0');
+
     setBomFormComponents(prev => prev.map(c => {
-      if (c.id === id) {
-        const updated = { ...c, [field]: value };
-        return updated;
+      if (c.id === componentId) {
+        return {
+          ...c,
+          productId: found.id,
+          name: found.name,
+          code: found.code || '',
+          unit: found.unit || 'عدد',
+          unitCost: cost || c.unitCost
+        };
       }
       return c;
     }));
   };
 
-  // Auto-fill component from existing raw materials
-  const handleSelectRawMaterial = (componentId: string, prodCode: string) => {
-    const found = products.find(p => p.code === prodCode || p.id === prodCode);
-    if (found) {
-      // Check for circular dependency (cannot add the manufactured product itself)
-      if (found.code === bomFormProductCode) {
-        showToast('امکان انتخاب خود محصول نهایی به عنوان قطعه وجود ندارد.', 'error');
-        return;
-      }
-
-      // Check if already in list
-      const alreadyExists = bomFormComponents.some(c => c.id !== componentId && c.code === found.code);
-      if (alreadyExists) {
-        showToast('این قطعه قبلاً به فرمول ساخت اضافه شده است. لطفاً تعداد آن را افزایش دهید.', 'error');
-      }
-
-      setBomFormComponents(prev => prev.map(c => {
-        if (c.id === componentId) {
-          const cost = found.price || parseNumberInput(found.productionPrice || found.suggestedPrice || '0');
-          return {
-            ...c,
-            productId: found.id,
-            name: found.name,
-            code: found.code || '',
-            unit: found.unit || 'عدد',
-            unitCost: cost || c.unitCost
-          };
-        }
-        return c;
-      }));
-    }
-  };
-
-  // Calculate direct cost of components
+  // Calculations for BOM direct and total costs
   const calculatedDirectCost = useMemo(() => {
     return bomFormComponents.reduce((sum, item) => {
       const qty = item.quantity || 0;
@@ -408,122 +627,173 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     }, 0);
   }, [bomFormComponents]);
 
-  // Calculate total estimated production cost
   const calculatedTotalCost = useMemo(() => {
     const labor = parseNumberInput(bomFormLaborCost);
     const overhead = parseNumberInput(bomFormOverheadCost);
     return calculatedDirectCost + labor + overhead;
   }, [calculatedDirectCost, bomFormLaborCost, bomFormOverheadCost]);
 
-  // Save BOM
+  // Save BOM Form
   const handleSaveBom = (e: React.FormEvent) => {
     e.preventDefault();
     setBomFormError('');
 
-    if (!bomFormTitle.trim()) {
+    const trimmedTitle = bomFormTitle.trim();
+    if (!trimmedTitle) {
       setBomFormError('لطفاً عنوان فرمول ساخت را وارد نمایید.');
       return;
     }
 
-    if (!bomFormProductCode) {
+    if (!bomFormTargetProdId) {
       setBomFormError('لطفاً محصول نهایی مقصد را انتخاب کنید.');
       return;
     }
 
-    // Find the target product
-    const targetProduct = products.find(p => p.code === bomFormProductCode || p.model === bomFormProductCode);
+    const targetProduct = products.find(p => p.id === bomFormTargetProdId);
     if (!targetProduct) {
-      setBomFormError('محصول نهایی نامعتبر است.');
+      setBomFormError('محصول نهایی انتخاب‌شده نامعتبر است.');
       return;
     }
 
-    // Validate components
+    // Version uniqueness check for this product
+    const trimmedVersion = (bomFormVersion || '1.0').trim().toLowerCase();
+    const isDuplicateVersion = boms.some(b => 
+      ((b.finishedProductId && b.finishedProductId === targetProduct.id) || b.productCode === targetProduct.code) &&
+      (b.version || '1.0').trim().toLowerCase() === trimmedVersion &&
+      (!editingBom || b.id !== editingBom.id)
+    );
+
+    if (isDuplicateVersion) {
+      setBomFormError('این نسخه از فرمول ساخت قبلاً برای محصول انتخاب‌شده ثبت شده است.');
+      return;
+    }
+
+    // Output validations
+    if (bomFormOutputQty <= 0 || isNaN(bomFormOutputQty)) {
+      setBomFormError('تعداد خروجی فرمول باید بزرگتر از صفر باشد.');
+      return;
+    }
+    if (!bomFormOutputUnit.trim()) {
+      setBomFormError('واحد خروجی فرمول الزامی است.');
+      return;
+    }
+
+    // Component validations
     if (bomFormComponents.length === 0) {
       setBomFormError('حداقل یک قطعه یا ماده اولیه برای فرمول الزامی است.');
       return;
     }
 
-    // Check invalid components or duplicate names/codes
-    const usedCodes = new Set<string>();
-    for (const cmp of bomFormComponents) {
+    const seenIds = new Set<string>();
+    const seenCodes = new Set<string>();
+
+    for (let i = 0; i < bomFormComponents.length; i++) {
+      const cmp = bomFormComponents[i];
       if (!cmp.name.trim()) {
-        setBomFormError('نام تمام قطعات و مواد اولیه فرمول را تکمیل نمایید.');
+        setBomFormError(`نام قطعه در ردیف ${i + 1} الزامی است.`);
         return;
       }
-      if (cmp.quantity <= 0) {
-        setBomFormError(`تعداد قطعه «${cmp.name}» باید بزرگتر از صفر باشد.`);
+      if (cmp.quantity <= 0 || isNaN(cmp.quantity)) {
+        setBomFormError(`تعداد قطعه «${cmp.name}» باید یک عدد مثبت بزرگتر از صفر باشد.`);
         return;
       }
-      if (cmp.code && cmp.code === bomFormProductCode) {
-        setBomFormError(`خطای ساختار: قطعه «${cmp.name}» نمی‌تواند خود محصول نهایی باشد (وابستگی دور باطل).`);
+      if (cmp.wastePercentage === undefined || cmp.wastePercentage < 0 || isNaN(cmp.wastePercentage)) {
+        setBomFormError(`درصد افت و پرتی قطعه «${cmp.name}» باید صفر یا بزرگتر باشد.`);
         return;
       }
-      if (cmp.code) {
-        if (usedCodes.has(cmp.code)) {
-          setBomFormError(`قطعه با کد «${cmp.code}» بیش از یک‌بار در فرمول تکرار شده است. لطفاً تعداد آن را تجمیع نمایید.`);
-          return;
-        }
-        usedCodes.add(cmp.code);
+      if (!cmp.unit.trim()) {
+        setBomFormError(`واحد سنجش قطعه «${cmp.name}» الزامی است.`);
+        return;
       }
+
+      // Check duplicate components within the formula
+      const compKey = cmp.productId || cmp.code?.trim().toLowerCase() || cmp.name.trim().toLowerCase();
+      if (cmp.productId && seenIds.has(cmp.productId)) {
+        setBomFormError(`قطعه «${cmp.name}» بیش از یک‌بار در فرمول تکرار شده است. لطفاً تعداد آن را تجمیع نمایید.`);
+        return;
+      }
+      if (compKey && seenCodes.has(compKey)) {
+        setBomFormError(`قطعه «${cmp.name}» بیش از یک‌بار در فرمول تکرار شده است. لطفاً تعداد آن را تجمیع نمایید.`);
+        return;
+      }
+      if (cmp.productId) seenIds.add(cmp.productId);
+      if (compKey) seenCodes.add(compKey);
     }
 
     const labor = parseNumberInput(bomFormLaborCost);
     const overhead = parseNumberInput(bomFormOverheadCost);
+    const nowIso = new Date().toISOString();
 
     if (editingBom) {
-      const updated: BOMFormula = {
+      const updatedBom: BOMFormula = {
         ...editingBom,
-        title: bomFormTitle.trim(),
-        productCode: bomFormProductCode,
+        finishedProductId: targetProduct.id,
+        title: trimmedTitle,
+        productCode: targetProduct.code || targetProduct.model || '',
         productName: targetProduct.name,
         productModel: targetProduct.model,
-        version: bomFormVersion.trim(),
-        outputQuantity: bomFormOutputQty || 1,
-        outputUnit: bomFormOutputUnit,
+        version: bomFormVersion.trim() || '1.0',
+        outputQuantity: bomFormOutputQty,
+        outputUnit: bomFormOutputUnit.trim(),
         components: bomFormComponents,
         laborCost: labor,
         overheadCost: overhead,
         totalDirectCost: calculatedDirectCost,
         totalEstimatedCost: calculatedTotalCost,
         description: bomFormDescription.trim(),
-        updatedAt: '۱۴۰۵/۰۴/۰۷'
+        isActive: bomFormIsActive,
+        updatedAt: nowIso
       };
 
-      setBoms(prev => prev.map(b => b.id === editingBom.id ? updated : b));
-      showToast(`فرمول ساخت «${bomFormTitle}» با موفقیت به‌روزرسانی شد.`, 'success');
+      setBoms(prev => prev.map(b => {
+        // Enforce ONE ACTIVE BOM rule for this product
+        if (bomFormIsActive) {
+          const isSameProduct = (b.finishedProductId && b.finishedProductId === targetProduct.id) || b.productCode === targetProduct.code;
+          if (isSameProduct && b.id !== editingBom.id) {
+            return { ...b, isActive: false };
+          }
+        }
+        return b.id === editingBom.id ? updatedBom : b;
+      }));
+
+      showToast(`فرمول ساخت «${trimmedTitle}» با موفقیت به‌روزرسانی شد.`, 'success');
     } else {
       const newBom: BOMFormula = {
         id: `BOM-${Date.now()}`,
-        title: bomFormTitle.trim(),
-        productCode: bomFormProductCode,
+        finishedProductId: targetProduct.id,
+        title: trimmedTitle,
+        productCode: targetProduct.code || targetProduct.model || '',
         productName: targetProduct.name,
         productModel: targetProduct.model,
-        version: bomFormVersion.trim(),
-        outputQuantity: bomFormOutputQty || 1,
-        outputUnit: bomFormOutputUnit,
+        version: bomFormVersion.trim() || '1.0',
+        outputQuantity: bomFormOutputQty,
+        outputUnit: bomFormOutputUnit.trim(),
         components: bomFormComponents,
         laborCost: labor,
         overheadCost: overhead,
         totalDirectCost: calculatedDirectCost,
         totalEstimatedCost: calculatedTotalCost,
         description: bomFormDescription.trim(),
-        isActive: true,
-        createdAt: '۱۴۰۵/۰۴/۰۷'
+        isActive: bomFormIsActive,
+        createdAt: nowIso
       };
 
-      setBoms(prev => [newBom, ...prev]);
-      showToast(`فرمول ساخت جدید «${bomFormTitle}» برای محصول «${targetProduct.name}» ثبت شد.`, 'success');
+      setBoms(prev => {
+        // If new BOM is active, deactivate other BOMs for that product
+        const nextList = bomFormIsActive
+          ? prev.map(b => {
+              const isSameProduct = (b.finishedProductId && b.finishedProductId === targetProduct.id) || b.productCode === targetProduct.code;
+              return isSameProduct ? { ...b, isActive: false } : b;
+            })
+          : [...prev];
+
+        return [newBom, ...nextList];
+      });
+
+      showToast(`فرمول ساخت «${trimmedTitle}» برای محصول «${targetProduct.name}» ثبت شد.`, 'success');
     }
 
     setIsBomModalOpen(false);
-  };
-
-  // Delete BOM
-  const handleDeleteBom = (id: string, title: string) => {
-    if (confirm(`آیا از حذف فرمول ساخت «${title}» اطمینان دارید؟`)) {
-      setBoms(prev => prev.filter(b => b.id !== id));
-      showToast(`فرمول ساخت «${title}» حذف گردید.`, 'info');
-    }
   };
 
   return (
@@ -551,14 +821,16 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-center">
-          <button
-            type="button"
-            onClick={() => setActiveTab('accounting_dashboard')}
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-          >
-            <ArrowRight className="w-4 h-4" />
-            <span>بازگشت به میز کار</span>
-          </button>
+          {setActiveTab && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('accounting_dashboard')}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span>بازگشت به میز کار</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -647,19 +919,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
           {activeSubTab === 'components' && (
             <button
               type="button"
-              onClick={() => {
-                setEditingProduct(null);
-                setProdFormName('');
-                setProdFormModel('');
-                setProdFormCode(`CMP-${Math.floor(1000 + Math.random() * 9000)}`);
-                setProdFormCategory('قطعات و مواد اولیه');
-                setProdFormType('raw_material');
-                setProdFormUnit('عدد');
-                setProdFormWarranty('0');
-                setProdFormSellingPrice('');
-                setProdFormDescription('');
-                setIsProductModalOpen(true);
-              }}
+              onClick={handleOpenAddComponent}
               className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
               <Plus className="w-4 h-4" />
@@ -683,14 +943,14 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
             <div className="bg-emerald-100 border border-emerald-300 rounded-2xl p-3.5 text-center space-y-1 relative overflow-hidden">
               <div className="text-[11px] font-bold text-slate-700">دارای فرمول ساخت فعال</div>
               <div className="text-lg font-black text-slate-900 font-mono">
-                {manufacturedProducts.filter(p => bomsByProductCode.has(p.code || p.model || '')).length}
+                {manufacturedProducts.filter(p => bomsByProduct.has(p.id) || (p.code ? bomsByProduct.has(p.code.trim().toLowerCase()) : false)).length}
               </div>
             </div>
 
             <div className="bg-amber-100 border border-amber-300 rounded-2xl p-3.5 text-center space-y-1 relative overflow-hidden">
-              <div className="text-[11px] font-bold text-slate-700">فاقد فرمول ساخت</div>
+              <div className="text-[11px] font-bold text-slate-700">فاقد فرمول ساخت فعال</div>
               <div className="text-lg font-black text-slate-900 font-mono">
-                {manufacturedProducts.filter(p => !bomsByProductCode.has(p.code || p.model || '')).length}
+                {manufacturedProducts.filter(p => !bomsByProduct.has(p.id) && (!p.code || !bomsByProduct.has(p.code.trim().toLowerCase()))).length}
               </div>
             </div>
 
@@ -731,7 +991,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                     bomFilter === 'has_bom' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  دارای BOM
+                  دارای BOM فعال
                 </button>
                 <button
                   type="button"
@@ -763,20 +1023,21 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {filteredProducts.map(product => {
-                const activeBom = bomsByProductCode.get(product.code || product.model || '');
+                const activeBom = bomsByProduct.get(product.id) || (product.code ? bomsByProduct.get(product.code.trim().toLowerCase()) : undefined);
                 const costPrice = activeBom ? activeBom.totalEstimatedCost : parseNumberInput(product.productionPrice || '0');
                 const sellPrice = parseNumberInput(product.sellingPrice || product.suggestedPrice || '0');
                 const profit = sellPrice > 0 && costPrice > 0 ? sellPrice - costPrice : 0;
                 const profitMargin = sellPrice > 0 && profit > 0 ? ((profit / sellPrice) * 100).toFixed(1) : '۰';
+                const isProductActive = product.isActive !== false;
 
                 return (
                   <div 
-                    key={product.id || product.code}
-                    className="bg-white border border-slate-300 hover:border-slate-400 rounded-2xl p-4 shadow-xs transition-all flex flex-col justify-between space-y-3.5 text-right relative overflow-hidden group"
+                    key={product.id}
+                    className={`bg-white border ${isProductActive ? 'border-slate-300 hover:border-slate-400' : 'border-slate-300 bg-slate-50/60 opacity-80'} rounded-2xl p-4 shadow-xs transition-all flex flex-col justify-between space-y-3.5 text-right relative overflow-hidden group`}
                   >
                     {/* Top status line */}
                     <div className={`absolute top-0 right-0 left-0 h-1 ${
-                      activeBom ? 'bg-emerald-600' : 'bg-amber-500'
+                      !isProductActive ? 'bg-slate-400' : activeBom ? 'bg-emerald-600' : 'bg-amber-500'
                     }`} />
 
                     <div>
@@ -789,6 +1050,11 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                             <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
                               {product.code || product.model}
                             </span>
+                            {!isProductActive && (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-200 text-slate-700 border border-slate-300">
+                                غیرفعال
+                              </span>
+                            )}
                           </div>
                           {product.model && (
                             <p className="text-xs text-slate-600 font-medium">
@@ -861,7 +1127,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                       )}
                     </div>
 
-                    {/* Card Actions */}
+                    {/* Card Actions (Soft toggle active / View / Edit) */}
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 flex-wrap">
                       <div className="flex items-center gap-1.5">
                         {activeBom ? (
@@ -905,13 +1171,19 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
+                        
+                        {/* Toggle active / inactive instead of physical delete */}
                         <button
                           type="button"
-                          onClick={() => handleDeleteProduct(product.id, product.name)}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all cursor-pointer"
-                          title="حذف کالا"
+                          onClick={() => handleToggleProductActive(product)}
+                          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                            isProductActive
+                              ? 'text-amber-600 hover:text-amber-800 hover:bg-amber-50'
+                              : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'
+                          }`}
+                          title={isProductActive ? 'غیرفعال‌سازی محصول' : 'فعال‌سازی مجدد محصول'}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Power className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -965,7 +1237,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
               {filteredBoms.map(bom => (
                 <div
                   key={bom.id}
-                  className="bg-white border border-slate-300 hover:border-slate-400 rounded-2xl p-4 sm:p-5 shadow-xs transition-all space-y-4"
+                  className={`bg-white border ${bom.isActive ? 'border-slate-300 hover:border-slate-400' : 'border-slate-300 bg-slate-50/70'} rounded-2xl p-4 sm:p-5 shadow-xs transition-all space-y-4`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div className="space-y-1">
@@ -984,10 +1256,13 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                             فرمول اصلی فعال
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600">
-                            آرشیو
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-200 text-slate-700 border border-slate-300">
+                            غیرفعال / آرشیو
                           </span>
                         )}
+                        <span className="text-[11px] text-slate-500 font-normal mr-2">
+                          ثبت: {formatPersianDate(bom.createdAt)}
+                        </span>
                       </div>
                       <p className="text-xs text-slate-600 font-medium">
                         محصول مقصد: <span className="font-black text-slate-900">{bom.productName}</span> 
@@ -995,7 +1270,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-1.5 self-start sm:self-center">
+                    <div className="flex items-center gap-1.5 self-start sm:self-center flex-wrap">
                       <button
                         type="button"
                         onClick={() => setViewingBom(bom)}
@@ -1024,13 +1299,18 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                         <Edit3 className="w-4 h-4" />
                       </button>
 
+                      {/* Toggle active status of BOM */}
                       <button
                         type="button"
-                        onClick={() => handleDeleteBom(bom.id, bom.title)}
-                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-                        title="حذف فرمول"
+                        onClick={() => handleToggleBomActive(bom)}
+                        className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                          bom.isActive 
+                            ? 'text-amber-600 hover:text-amber-800 hover:bg-amber-50' 
+                            : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'
+                        }`}
+                        title={bom.isActive ? 'غیرفعال‌سازی فرمول' : 'فعال‌سازی به عنوان فرمول اصلی'}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Power className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -1139,14 +1419,17 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                     <th className="py-3 px-3 text-center">نوع</th>
                     <th className="py-3 px-3 text-center">واحد سنجش</th>
                     <th className="py-3 px-3 text-center">میانگین بهای برآوردی</th>
+                    <th className="py-3 px-3 text-center">وضعیت</th>
                     <th className="py-3 px-4 text-center">عملیات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
                   {rawMaterialProducts.map((p, idx) => {
                     const typeInfo = getProductTypeLabel(p.productType);
+                    const isItemActive = p.isActive !== false;
+
                     return (
-                      <tr key={p.id || idx} className="hover:bg-slate-50/70">
+                      <tr key={p.id || idx} className={`hover:bg-slate-50/70 ${!isItemActive ? 'bg-slate-50/50 opacity-70' : ''}`}>
                         <td className="py-3 px-4">
                           <div className="font-black text-slate-900">{p.name}</div>
                           {p.description && <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{p.description}</div>}
@@ -1161,11 +1444,18 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                         <td className="py-3 px-3 text-center font-mono font-bold text-blue-900">
                           {p.price ? `${formatNum(p.price)} تومان` : (p.productionPrice || p.suggestedPrice || '—')}
                         </td>
+                        <td className="py-3 px-3 text-center">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            isItemActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
+                          }`}>
+                            {isItemActive ? 'فعال' : 'غیرفعال'}
+                          </span>
+                        </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               type="button"
-                              onClick={() => handleOpenEditProduct(p)}
+                              onClick={() => handleOpenEditComponent(p)}
                               className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
                               title="ویرایش"
                             >
@@ -1173,11 +1463,13 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteProduct(p.id, p.name)}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all cursor-pointer"
-                              title="حذف"
+                              onClick={() => handleToggleComponentActive(p)}
+                              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                isItemActive ? 'text-amber-600 hover:text-amber-800 hover:bg-amber-50' : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'
+                              }`}
+                              title={isItemActive ? 'غیرفعال‌سازی قطعه' : 'فعال‌سازی مجدد'}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Power className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -1191,7 +1483,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
         </div>
       )}
 
-      {/* ================= MODAL: ADD / EDIT PRODUCT ================= */}
+      {/* ================= MODAL: ADD / EDIT MANUFACTURED PRODUCT (SUBTAB 1) ================= */}
       <AnimatePresence>
         {isProductModalOpen && (
           <div 
@@ -1210,7 +1502,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                 <div className="flex items-center gap-2">
                   <Boxes className="w-5 h-5 text-blue-700" />
                   <h2 className="text-sm sm:text-base font-black text-slate-900">
-                    {editingProduct ? 'ویرایش مشخصات کالا' : 'تعریف کالای جدید'}
+                    {editingProduct ? 'ویرایش محصول تولیدی' : 'تعریف محصول تولیدی جدید'}
                   </h2>
                 </div>
                 <button
@@ -1224,36 +1516,30 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
 
               <form onSubmit={handleSaveProduct} className="p-5 space-y-4 text-right">
                 
-                {/* Product Type Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-800 block">
-                    نوع و ماهیت کالا <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={prodFormType}
-                    onChange={e => setProdFormType(e.target.value as ProductType)}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-600 cursor-pointer"
-                  >
-                    <option value="manufactured">⚙️ محصول تولیدی (دارای فرآیند ساخت و مونتاژ)</option>
-                    <option value="raw_material">🔩 قطعه یا ماده اولیه (جهت مصرف در خط تولید)</option>
-                    <option value="purchased">📦 کالای خریداری‌شده (جهت بازرگانی و فروش مستقیم)</option>
-                    <option value="consumable">🧪 کالای مصرفی (لوازم بسته بندی، تینر، هویه)</option>
-                    <option value="service">🛠️ خدمت یا اجرت تولید و تعمیر</option>
-                  </select>
+                {/* Product Type Banner: Strictly Fixed to Manufactured (Rule 8) */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 bg-blue-600 text-white rounded-lg text-xs font-black">
+                      محصول تولیدی
+                    </span>
+                    <span className="text-xs text-blue-900 font-bold">
+                      ماهیت کالا: دارای فرمول ساخت و خط مونتاژ (Manufactured)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Name */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-black text-slate-800 block">
-                      نام کالا <span className="text-rose-500">*</span>
+                      نام محصول تولیدی <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={prodFormName}
                       onChange={e => setProdFormName(e.target.value)}
-                      placeholder="مانند: شارژر باتری ۱۰ آمپر"
+                      placeholder="مانند: شارژر باتری صنعتی ۱۰ آمپر"
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-blue-600 outline-none"
                     />
                   </div>
@@ -1261,7 +1547,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                   {/* Code */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-black text-slate-800 block">
-                      کد کالا <span className="text-rose-500">*</span>
+                      کد یکتای محصول <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1299,10 +1585,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                       <option value="عدد">عدد</option>
                       <option value="متر">متر</option>
                       <option value="کیلوگرم">کیلوگرم</option>
-                      <option value="گرم">گرم</option>
-                      <option value="سانتی‌متر">سانتی‌متر</option>
                       <option value="بسته">بسته</option>
-                      <option value="جفت">جفت</option>
                       <option value="ست">ست</option>
                     </select>
                   </div>
@@ -1359,7 +1642,148 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                     type="submit"
                     className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black cursor-pointer shadow-xs transition-all"
                   >
-                    {editingProduct ? 'ذخیره تغییرات کالا' : 'ثبت و ایجاد کالا'}
+                    {editingProduct ? 'ذخیره تغییرات محصول' : 'ثبت و تعریف محصول تولیدی'}
+                  </button>
+                </div>
+
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= MODAL: ADD / EDIT RAW MATERIAL / COMPONENT (SUBTAB 3) ================= */}
+      <AnimatePresence>
+        {isComponentModalOpen && (
+          <div 
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+            onClick={() => setIsComponentModalOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white rounded-2xl w-full max-w-lg border border-slate-300 shadow-2xl overflow-hidden my-auto"
+              dir="rtl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="bg-[#DCE6F2] px-5 py-4 border-b border-blue-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wrench className="w-5 h-5 text-blue-700" />
+                  <h2 className="text-sm sm:text-base font-black text-slate-900">
+                    {editingComponentItem ? 'ویرایش قطعه / ماده اولیه' : 'تعریف قطعه یا ماده اولیه جدید'}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsComponentModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveComponent} className="p-5 space-y-4 text-right">
+                
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-800 block">
+                    نوع قلم مصرفی <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={compFormType}
+                    onChange={e => setCompFormType(e.target.value as ProductType)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                  >
+                    <option value="raw_material">🔩 قطعه یا ماده اولیه (جهت مصرف در خط مونتاژ)</option>
+                    <option value="purchased">📦 کالای خریداری‌شده (قطعه تجاری)</option>
+                    <option value="consumable">🧪 کالای مصرفی (وارنیش، بست، چسب، تینر)</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-800 block">
+                      نام قطعه <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={compFormName}
+                      onChange={e => setCompFormName(e.target.value)}
+                      placeholder="مانند: ترانسفورماتور ۱۲ ولت"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-800 block">
+                      کد کالا <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={compFormCode}
+                      onChange={e => setCompFormCode(e.target.value)}
+                      placeholder="مانند: TR-1210-CU"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 font-mono outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-800 block">واحد سنجش</label>
+                    <select
+                      value={compFormUnit}
+                      onChange={e => setCompFormUnit(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                    >
+                      <option value="عدد">عدد</option>
+                      <option value="متر">متر</option>
+                      <option value="کیلوگرم">کیلوگرم</option>
+                      <option value="گرم">گرم</option>
+                      <option value="بسته">بسته</option>
+                      <option value="جفت">جفت</option>
+                      <option value="ست">ست</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-800 block">میانگین بهای خرید / برآوردی (تومان)</label>
+                    <input
+                      type="text"
+                      value={compFormCost}
+                      onChange={e => setCompFormCost(e.target.value)}
+                      placeholder="مانند: ۱۲۰,۰۰۰"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 font-mono outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-800 block">توضیحات</label>
+                  <textarea
+                    rows={2}
+                    value={compFormDescription}
+                    onChange={e => setCompFormDescription(e.target.value)}
+                    placeholder="مشخصات فنی قطعه..."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none resize-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setIsComponentModalOpen(false)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black cursor-pointer transition-all"
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black cursor-pointer shadow-xs transition-all"
+                  >
+                    {editingComponentItem ? 'ذخیره تغییرات' : 'ثبت قطعه'}
                   </button>
                 </div>
 
@@ -1442,26 +1866,26 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                   </div>
                 </div>
 
-                {/* Target Product Selection */}
+                {/* Target Product Selection (Strictly active manufactured products) */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1 sm:col-span-2">
                     <label className="text-xs font-black text-slate-800 block">
                       محصول نهایی مقصد <span className="text-rose-500">*</span>
                     </label>
                     <select
-                      value={bomFormProductCode}
+                      value={bomFormTargetProdId}
                       onChange={e => {
                         const val = e.target.value;
-                        setBomFormProductCode(val);
-                        const sel = products.find(p => p.code === val || p.model === val);
+                        setBomFormTargetProdId(val);
+                        const sel = products.find(p => p.id === val);
                         if (sel && !bomFormTitle) {
                           setBomFormTitle(`فرمول ساخت ${sel.name}`);
                         }
                       }}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 cursor-pointer outline-none"
                     >
-                      {manufacturedProducts.map(p => (
-                        <option key={p.id || p.code} value={p.code || p.model || ''}>
+                      {activeManufacturedProducts.map(p => (
+                        <option key={p.id} value={p.id}>
                           {p.name} {p.model ? `(${p.model})` : ''} - کد: {p.code || 'بدون کد'}
                         </option>
                       ))}
@@ -1489,6 +1913,19 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Status Toggle (Single active rule info) */}
+                <div className="flex items-center gap-2 pt-1 pb-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={bomFormIsActive}
+                      onChange={e => setBomFormIsActive(e.target.checked)}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                    />
+                    <span>تعیین به عنوان فرمول فعال اصلی محصول (سایر فرمول‌های این محصول غیرفعال خواهند شد)</span>
+                  </label>
                 </div>
 
                 {/* Components Table Builder */}
@@ -1524,7 +1961,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                               {idx + 1}
                             </span>
 
-                            {/* Select from existing materials */}
+                            {/* Select from existing materials: Strictly raw_material, purchased, consumable */}
                             <div className="flex-1">
                               <select
                                 onChange={e => {
@@ -1534,13 +1971,11 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                                 defaultValue=""
                               >
                                 <option value="" disabled>-- انتخاب سریع از بانک قطعات و مواد اولیه --</option>
-                                {products
-                                  .filter(p => p.code !== bomFormProductCode)
-                                  .map(p => (
-                                    <option key={p.id || p.code} value={p.code || p.id}>
-                                      {p.name} {p.code ? `(${p.code})` : ''} - {p.unit || 'عدد'}
-                                    </option>
-                                  ))}
+                                {rawMaterialProducts.map(p => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name} {p.code ? `(${p.code})` : ''} - {getProductTypeLabel(p.productType).label}
+                                  </option>
+                                ))}
                               </select>
                             </div>
 
@@ -1550,7 +1985,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                               className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors cursor-pointer shrink-0"
                               title="حذف ردیف"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
 
@@ -1561,7 +1996,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                                 type="text"
                                 required
                                 value={cmp.name}
-                                onChange={e => handleUpdateComponent(cmp.id, 'name', e.target.value)}
+                                onChange={e => handleUpdateComponentText(cmp.id, 'name', e.target.value)}
                                 placeholder="نام قطعه / ماده اولیه *"
                                 className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none"
                               />
@@ -1572,7 +2007,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                               <input
                                 type="text"
                                 value={cmp.code || ''}
-                                onChange={e => handleUpdateComponent(cmp.id, 'code', e.target.value)}
+                                onChange={e => handleUpdateComponentText(cmp.id, 'code', e.target.value)}
                                 placeholder="کد قطعه"
                                 className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-800 outline-none"
                               />
@@ -1586,14 +2021,14 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                                 step="any"
                                 required
                                 value={cmp.quantity || ''}
-                                onChange={e => handleUpdateComponent(cmp.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                onChange={e => handleUpdateComponentNumber(cmp.id, 'quantity', parseFloat(e.target.value) || 0)}
                                 placeholder="تعداد"
                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-800 outline-none text-center"
                               />
                               <input
                                 type="text"
                                 value={cmp.unit || 'عدد'}
-                                onChange={e => handleUpdateComponent(cmp.id, 'unit', e.target.value)}
+                                onChange={e => handleUpdateComponentText(cmp.id, 'unit', e.target.value)}
                                 placeholder="واحد"
                                 className="w-14 px-1 py-1.5 bg-white border border-slate-300 rounded-lg text-[11px] font-bold text-slate-700 outline-none text-center"
                               />
@@ -1605,7 +2040,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                                 type="number"
                                 min="0"
                                 value={cmp.unitCost || ''}
-                                onChange={e => handleUpdateComponent(cmp.id, 'unitCost', parseFloat(e.target.value) || 0)}
+                                onChange={e => handleUpdateComponentNumber(cmp.id, 'unitCost', parseFloat(e.target.value) || 0)}
                                 placeholder="هزینه واحد (ت)"
                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-800 outline-none text-center"
                               />
@@ -1619,7 +2054,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                                   min="0"
                                   max="100"
                                   value={cmp.wastePercentage || ''}
-                                  onChange={e => handleUpdateComponent(cmp.id, 'wastePercentage', parseFloat(e.target.value) || 0)}
+                                  onChange={e => handleUpdateComponentNumber(cmp.id, 'wastePercentage', parseFloat(e.target.value) || 0)}
                                   placeholder="پرتی٪"
                                   className="w-full px-1.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-800 outline-none text-center"
                                   title="درصد افت و پرتی"
@@ -1634,7 +2069,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                             <input
                               type="text"
                               value={cmp.notes || ''}
-                              onChange={e => handleUpdateComponent(cmp.id, 'notes', e.target.value)}
+                              onChange={e => handleUpdateComponentText(cmp.id, 'notes', e.target.value)}
                               placeholder="ملاحظات مونتاژ این قطعه (اختیاری)..."
                               className="bg-transparent border-none text-[11px] text-slate-500 outline-none flex-1"
                             />
@@ -1742,7 +2177,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
                       {viewingBom.title}
                     </h2>
                     <p className="text-[11px] text-slate-600">
-                      محصول: <span className="font-bold">{viewingBom.productName}</span> | نسخه: {viewingBom.version || '1.0'}
+                      محصول: <span className="font-bold">{viewingBom.productName}</span> | نسخه: {viewingBom.version || '1.0'} | وضعیت: {viewingBom.isActive ? 'فعال' : 'غیرفعال'}
                     </p>
                   </div>
                 </div>

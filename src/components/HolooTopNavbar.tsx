@@ -59,7 +59,7 @@ export default function HolooTopNavbar({
             }`}
           >
             <Coins className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-            <span className="whitespace-nowrap">صدور فاکتورها (خرید، فروش)</span>
+            <span className="whitespace-nowrap">صدور فاکتورها (خرید، فروش، پیش‌فاکتور)</span>
           </button>
 
           <button

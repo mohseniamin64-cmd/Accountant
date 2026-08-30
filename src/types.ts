@@ -186,6 +186,7 @@ export interface BOMComponent {
 
 export interface BOMFormula {
   id: string;
+  finishedProductId?: string;
   title: string;
   productCode: string;
   productName: string;

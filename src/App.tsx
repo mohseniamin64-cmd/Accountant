@@ -462,6 +462,7 @@ export default function App() {
             sales,
             customers,
             products,
+            boms,
             bankAccounts,
             suppliers,
             purchases,
@@ -496,6 +497,8 @@ export default function App() {
     sales,
     customers,
     products,
+    boms,
+    bankAccounts,
     suppliers,
     purchases,
     inventory
@@ -3503,6 +3506,7 @@ export default function App() {
                     boms={boms}
                     setBoms={setBoms}
                     showToast={showToast}
+                    setActiveTab={setActiveTab}
                   />
                 </motion.div>
               )}
