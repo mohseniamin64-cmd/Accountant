@@ -719,7 +719,7 @@ app.get("/api/state", requireAuth, (req, res) => {
 app.post("/api/state", requireAuth, (req, res) => {
   const user = (req as any).authUser;
   const allowedByRole: Record<string, string[]> = {
-    admin: ["setupCompanyName", "setupCompanyEnName", "setupServerName", "setupServerIp", "setupCurrency", "setupWarrantyDuration", "setupMaxStayDays", "warrantyDb", "sales", "customers", "products", "bankAccounts", "suppliers", "purchases", "inventory"],
+    admin: ["setupCompanyName", "setupCompanyEnName", "setupServerName", "setupServerIp", "setupCurrency", "setupWarrantyDuration", "setupMaxStayDays", "warrantyDb", "sales", "customers", "products", "bankAccounts", "suppliers", "purchases", "inventory", "boms"],
     reception: ["warrantyDb", "customers", "bankAccounts"],
     technician: ["warrantyDb", "inventory"],
     delivery: ["warrantyDb", "sales", "customers", "bankAccounts"]

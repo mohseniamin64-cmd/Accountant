@@ -77,7 +77,7 @@ export interface SystemUser {
 
 export type SystemModule = 'hub' | 'accounting' | 'services';
 
-export type ActiveTab = 'hub' | 'dashboard' | 'search' | 'new_claim' | 'queue' | 'users' | 'config' | 'register_sale' | 'customers' | 'products' | 'bank_accounts' | 'handover' | 'reports' | 'dossier' | 'start_repair' | 'final_test' | 'device_delivery' | 'settlement' | 'sales_history' | 'purchase_invoice' | 'purchase_history' | 'project_backup' | 'accounting_dashboard' | 'accounting_reports';
+export type ActiveTab = 'hub' | 'dashboard' | 'search' | 'new_claim' | 'queue' | 'users' | 'config' | 'register_sale' | 'customers' | 'products' | 'bank_accounts' | 'handover' | 'reports' | 'dossier' | 'start_repair' | 'final_test' | 'device_delivery' | 'settlement' | 'sales_history' | 'purchase_invoice' | 'purchase_history' | 'project_backup' | 'accounting_dashboard' | 'accounting_reports' | 'production';
 
 export interface BankAccount {
   id: string;
@@ -165,6 +165,45 @@ export interface Customer {
   email?: string;
 }
 
+export type ProductType = 
+  | 'purchased'      // کالای خریداری‌شده
+  | 'raw_material'   // قطعه یا ماده اولیه
+  | 'manufactured'   // محصول تولیدی
+  | 'consumable'     // کالای مصرفی
+  | 'service';       // خدمت
+
+export interface BOMComponent {
+  id: string;
+  productId?: string;
+  name: string;
+  code?: string;
+  unit: string;
+  quantity: number;
+  unitCost?: number;
+  wastePercentage?: number; // ضریب پرتی یا افت درصد
+  notes?: string;
+}
+
+export interface BOMFormula {
+  id: string;
+  title: string;
+  productCode: string;
+  productName: string;
+  productModel?: string;
+  version?: string;
+  outputQuantity: number; // تعداد خروجی فرمول (معمولاً ۱ عدد)
+  outputUnit: string;
+  components: BOMComponent[];
+  overheadCost?: number; // هزینه سربار ساخت (تومان)
+  laborCost?: number;    // هزینه دستمزد تولید (تومان)
+  totalDirectCost: number; // جمع بهای مستقیم قطعات
+  totalEstimatedCost: number; // بهای تمام‌شده برآوردی
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Product {
   id: string;
   code?: string;
@@ -174,6 +213,17 @@ export interface Product {
   warrantyMonths?: number;
   category?: string;
   model?: string;
+  productType?: ProductType;
+  unit?: string;
+  suggestedPrice?: string;
+  productionPrice?: string;
+  sellingPrice?: string;
+  warrantyDuration?: string;
+  isActive?: boolean;
+  description?: string;
+  image?: string;
+  bomId?: string;
+  hasBOM?: boolean;
 }
 
 export interface FileItem {

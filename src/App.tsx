@@ -66,10 +66,11 @@ import {
   Database,
   Layers
 } from 'lucide-react';
-import { WarrantyItem, WorkshopRole, ActiveTab, SystemModule, SystemUser, Supplier, PurchaseRecord, InventoryItem, BankAccount } from './types';
-import { INITIAL_WARRANTY_DB, DEFECT_PRESETS, INITIAL_BANK_ACCOUNTS } from './initialData';
+import { WarrantyItem, WorkshopRole, ActiveTab, SystemModule, SystemUser, Supplier, PurchaseRecord, InventoryItem, BankAccount, BOMFormula } from './types';
+import { INITIAL_WARRANTY_DB, DEFECT_PRESETS, INITIAL_BANK_ACCOUNTS, INITIAL_BOMS } from './initialData';
 import { SystemSelectionHub } from './components/SystemSelectionHub';
 import { AccountingDesk } from './components/AccountingDesk';
+import ProductionUnit from './components/ProductionUnit';
 import { 
   DevDashboardDrawer, 
   DevPreviewContainer,
@@ -217,6 +218,7 @@ export default function App() {
       case 'register_sale': return 'صدور فاکتور';
       case 'customers': return 'مدیریت طرف‌حساب‌ها';
       case 'products': return 'تعریف و مدیریت کالاها';
+      case 'production': return 'واحد تولید و فرمول ساخت (BOM)';
       case 'bank_accounts': return 'مدیریت حساب‌های بانکی و پوز';
       case 'handover': return 'تحویل و عودت قطعه';
       case 'reports': return 'گزارش‌ها و آمار';
@@ -316,6 +318,8 @@ export default function App() {
 
   const [products, setProducts] = useState<any[]>([]);
 
+  const [boms, setBoms] = useState<BOMFormula[]>(INITIAL_BOMS);
+
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(INITIAL_BANK_ACCOUNTS);
 
   // Load state from central Express server on mount
@@ -376,6 +380,7 @@ export default function App() {
             if (data.sales) setSales(data.sales);
             if (data.customers) setCustomers(data.customers);
             if (data.products) setProducts(data.products);
+            if (data.boms) setBoms(data.boms);
             if (data.bankAccounts) setBankAccounts(data.bankAccounts);
             if (data.suppliers) setSuppliers(data.suppliers);
             if (data.purchases) setPurchases(data.purchases);
@@ -1014,6 +1019,7 @@ export default function App() {
           if (data.sales) setSales(data.sales);
           if (data.customers) setCustomers(data.customers);
           if (data.products) setProducts(data.products);
+          if (data.boms) setBoms(data.boms);
           if (data.bankAccounts) setBankAccounts(data.bankAccounts);
           if (data.suppliers) setSuppliers(data.suppliers);
           if (data.purchases) setPurchases(data.purchases);
@@ -1963,6 +1969,16 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => { setActiveTab('production'); setDevActiveScreen(null); }}
+                    className={`w-full py-1.5 px-2 rounded-xl text-right text-[11px] font-black flex items-center gap-2 transition-all cursor-pointer ${
+                      activeTab === 'production' && devActiveScreen === null ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Cpu className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span className="truncate">واحد تولید و BOM</span>
+                  </button>
+
+                  <button
                     onClick={() => { setActiveTab('customers'); setDevActiveScreen(null); }}
                     className={`w-full py-1.5 px-2 rounded-xl text-right text-[11px] font-black flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'customers' && devActiveScreen === null ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
@@ -2689,6 +2705,7 @@ export default function App() {
                     sales={sales}
                     purchases={purchases}
                     bankAccounts={bankAccounts}
+                    boms={boms}
                   />
                 </motion.div>
               )}
@@ -3468,6 +3485,24 @@ export default function App() {
                     prodFormSuggestedPrice={prodFormSuggestedPrice}
                     setProdFormSuggestedPrice={setProdFormSuggestedPrice}
                     sales={sales}
+                  />
+                </motion.div>
+              )}
+
+              {/* TAB: PRODUCTION UNIT & BOM */}
+              {activeTab === 'production' && (
+                <motion.div
+                  key="production-unit-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <ProductionUnit
+                    products={products}
+                    setProducts={setProducts}
+                    boms={boms}
+                    setBoms={setBoms}
+                    showToast={showToast}
                   />
                 </motion.div>
               )}
