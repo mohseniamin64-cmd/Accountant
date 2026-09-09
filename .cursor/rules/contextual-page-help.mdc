@@ -1,0 +1,15 @@
+---
+description: Provide accessible contextual help from the upper-left of every application area
+alwaysApply: true
+---
+
+# Contextual Page Help
+
+- Every page and functional section must expose a visible question-mark help button at its upper-left edge in the RTL layout.
+- The help control must not disturb the true center alignment of the header title.
+- Opening help must show guidance specific to the current page or section, not generic placeholder text.
+- Explain the area's purpose, fields, actions, normal workflow, required permissions, important accounting or inventory effects, validation errors, and irreversible operations.
+- Help content must stay synchronized whenever the related feature or business rule changes.
+- The button and help surface must be keyboard accessible, mobile friendly, and have a clear Persian accessible label.
+- Use an adequate touch target and prevent overlap with headers, navigation, modals, and mobile controls.
+- Do not add inactive help buttons, unfinished text, or fabricated instructions.

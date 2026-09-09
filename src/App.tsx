@@ -1159,7 +1159,7 @@ export default function App() {
       defectType: newDefectType,
       status: 'pending',
       expiryDate: '۱۴۰۸/۱۲/۲۹',
-      registeredAt: 'امروز (' + new Date().toLocaleDateString('fa-IR') + ')',
+      registeredAt: 'امروز (' + new Date().toLocaleDateString('fa-IR-u-ca-persian') + ')',
       photoUrl: capturedPhoto || undefined,
       statusNotes: newNotes.trim() || undefined,
       technicianName: userRole === 'technician' ? 'مهندس احمدی' : undefined

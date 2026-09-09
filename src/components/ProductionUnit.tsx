@@ -107,7 +107,7 @@ export const ProductionUnit: React.FC<ProductionUnitProps> = ({
     try {
       const date = new Date(isoStr);
       if (isNaN(date.getTime())) return isoStr;
-      return new Intl.DateTimeFormat('fa-IR', {
+      return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'

@@ -1,0 +1,940 @@
+.accounting-page {
+  min-width: 0;
+}
+
+.accounting-page .button.danger {
+  color: #8b3038;
+  background: #fff1f2;
+  border-color: #e7bfc3;
+}
+
+.accounting-page .button.danger:hover:not(:disabled) {
+  background: #fde4e7;
+}
+
+.accounting-page .button.success {
+  color: #fff;
+  background: var(--green);
+  border-color: #226b5a;
+}
+
+.accounting-page .button.success:hover:not(:disabled) {
+  background: #226b5a;
+}
+
+.accounting-tabs {
+  margin: 0 0 20px;
+  padding: 6px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  background: #e5ebf2;
+  border: 1px solid #d2dce7;
+  border-radius: 15px;
+}
+
+.accounting-tabs button {
+  min-height: 44px;
+  padding: 8px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #536176;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.accounting-tabs button.active {
+  color: var(--navy-strong);
+  background: #fff;
+  border-color: #cbd7e4;
+  box-shadow: 0 3px 10px rgb(29 53 87 / 7%);
+}
+
+.accounting-tabs svg {
+  width: 19px;
+}
+
+.accounting-section {
+  min-width: 0;
+}
+
+.accounting-section-heading {
+  position: relative;
+  margin-bottom: 17px;
+  padding: 18px 58px 18px 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  background: #f7f9fc;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+}
+
+.accounting-section-heading > div:first-of-type {
+  text-align: center;
+}
+
+.accounting-section-heading .context-help-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+}
+
+.accounting-form-card,
+.accounting-detail-card,
+.accounting-report-result {
+  min-width: 0;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  box-shadow: var(--shadow);
+}
+
+.accounting-form-card {
+  background: #f9fbfd;
+}
+
+.form-section-heading {
+  position: relative;
+}
+
+.accounting-form-card .form-section-heading,
+.accounting-detail-card .form-section-heading,
+.accounting-report-result .form-section-heading {
+  min-height: 46px;
+  padding: 0 52px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.accounting-form-card .form-section-heading > div,
+.accounting-detail-card .form-section-heading > div,
+.accounting-report-result .form-section-heading > div {
+  text-align: center;
+}
+
+.accounting-form-card .context-help-button,
+.accounting-detail-card .context-help-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.journal-editor-heading {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+}
+
+.journal-editor-heading .context-help-button {
+  grid-column: 1;
+  position: static;
+}
+
+.journal-editor-heading > div {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.journal-editor-heading > .icon-button {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.accounting-fiscal-form-grid,
+.journal-header-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  align-items: start;
+}
+
+.accounting-fiscal-form-grid .field,
+.journal-header-grid .field,
+.journal-line-grid .field,
+.accounting-filter-card .field,
+.accounting-report-filter .field {
+  margin: 0;
+}
+
+.journal-description {
+  grid-column: span 2;
+}
+
+.journal-lines-heading {
+  margin: 24px 0 16px;
+  padding-top: 18px !important;
+  border-top: 1px solid var(--border);
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.journal-lines-heading .context-help-button {
+  top: 18px;
+}
+
+.journal-lines {
+  display: grid;
+  gap: 14px;
+}
+
+.journal-line-card {
+  min-width: 0;
+  padding: 16px;
+  background: #f1f5f9;
+  border: 1px solid #d3dee8;
+  border-radius: 15px;
+  box-shadow: 0 4px 14px rgb(29 53 87 / 5%);
+}
+
+.journal-line-card > header {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: center;
+}
+
+.journal-line-card > header strong {
+  flex: 1;
+  color: var(--navy-strong);
+  text-align: center;
+}
+
+.compact-button {
+  min-height: 36px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+
+.compact-button svg {
+  width: 17px;
+}
+
+.journal-line-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.journal-account-field {
+  grid-column: span 2;
+}
+
+.journal-line-description {
+  grid-column: 1 / -1;
+}
+
+.journal-totals {
+  margin-top: 18px;
+  padding: 15px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  text-align: center;
+  border: 1px solid;
+  border-radius: 14px;
+}
+
+.journal-totals.balanced {
+  background: #eaf5f1;
+  border-color: #bddbd1;
+}
+
+.journal-totals.unbalanced {
+  background: #fff7e8;
+  border-color: #ead4a9;
+}
+
+.journal-totals > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  text-align: center;
+}
+
+.journal-totals span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.journal-totals strong {
+  color: var(--navy-strong);
+  overflow-wrap: anywhere;
+}
+
+.journal-totals p {
+  grid-column: 1 / -1;
+  margin: 3px 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.accounting-form-actions,
+.accounting-detail-actions,
+.accounting-fiscal-actions,
+.accounting-filter-actions,
+.accounting-report-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.accounting-form-actions {
+  margin-top: 18px;
+}
+
+.accounting-filter-card,
+.accounting-report-filter {
+  margin-bottom: 20px;
+  padding: 17px;
+  display: grid;
+  grid-template-columns: minmax(155px, 0.8fr) repeat(2, minmax(180px, 1fr)) auto;
+  gap: 13px;
+  align-items: end;
+  background: #f5f8fb;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+}
+
+.accounting-filter-actions,
+.accounting-report-actions {
+  padding-bottom: 21px;
+}
+
+.accounting-report-account {
+  grid-column: span 2;
+}
+
+.accounting-table-desktop {
+  min-width: 0;
+}
+
+.accounting-table-desktop table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.accounting-table-desktop th,
+.accounting-table-desktop td {
+  padding: 12px 10px;
+  text-align: center;
+  border-bottom: 1px solid #e0e7ef;
+  vertical-align: middle;
+}
+
+.accounting-table-desktop th {
+  color: #4a586c;
+  background: #f1f5f9;
+  font-size: 0.78rem;
+}
+
+.accounting-table-desktop td {
+  color: #2d384a;
+  font-size: 0.84rem;
+}
+
+.accounting-table-desktop td strong,
+.accounting-table-desktop td small {
+  display: block;
+  text-align: center;
+}
+
+.accounting-table-desktop td small {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.journal-report-table {
+  min-width: 1050px !important;
+}
+
+.ledger-report-table {
+  min-width: 1180px !important;
+}
+
+.accounting-cards-mobile {
+  display: none;
+}
+
+.accounting-journal-card,
+.accounting-report-card,
+.accounting-fiscal-card {
+  min-width: 0;
+  padding: 15px;
+  background: #fff;
+  border: 1px solid #d6e0e9;
+  border-radius: 14px;
+  box-shadow: 0 5px 15px rgb(29 53 87 / 6%);
+}
+
+.accounting-journal-card > header,
+.accounting-report-card > header,
+.accounting-fiscal-card > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: center;
+}
+
+.accounting-journal-card > header > div {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.accounting-journal-card header span,
+.accounting-report-card header span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.accounting-journal-card p,
+.accounting-report-card p {
+  margin: 13px 0;
+  color: #465267;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.accounting-journal-card dl,
+.accounting-report-card dl,
+.accounting-fiscal-card dl {
+  margin: 12px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.accounting-journal-card dl div,
+.accounting-report-card dl div,
+.accounting-fiscal-card dl div {
+  min-width: 0;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  background: #f3f7fa;
+  border: 1px solid #dce5ed;
+  border-radius: 10px;
+}
+
+.accounting-journal-card dt,
+.accounting-report-card dt,
+.accounting-fiscal-card dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.accounting-journal-card dd,
+.accounting-report-card dd,
+.accounting-fiscal-card dd {
+  margin: 0;
+  color: var(--navy-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.accounting-detail-card {
+  margin-top: 20px;
+}
+
+.accounting-detail-heading {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+}
+
+.accounting-detail-heading .context-help-button {
+  grid-column: 1;
+  position: static;
+}
+
+.accounting-detail-heading > div {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.accounting-detail-heading > .icon-button {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.accounting-detail-summary {
+  margin: 18px 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.accounting-detail-summary > div,
+.ledger-opening {
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  gap: 5px;
+  text-align: center;
+  background: #f2f7fa;
+  border: 1px solid #d8e2ea;
+  border-radius: 12px;
+}
+
+.accounting-detail-summary .wide-summary {
+  grid-column: 1 / -1;
+}
+
+.accounting-detail-summary span,
+.ledger-opening span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.accounting-detail-summary strong,
+.ledger-opening strong {
+  color: var(--navy-strong);
+  overflow-wrap: anywhere;
+}
+
+.accounting-detail-actions {
+  margin-top: 18px;
+}
+
+.accounting-reverse-form {
+  width: min(720px, 100%);
+  margin: 18px auto 0;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(190px, 0.7fr) minmax(260px, 1.3fr) auto;
+  gap: 13px;
+  align-items: end;
+  background: #fff5f5;
+  border: 1px solid #ebcfd2;
+  border-radius: 14px;
+}
+
+.accounting-reverse-form .field {
+  margin: 0;
+}
+
+.accounting-reverse-form .button {
+  margin-bottom: 21px;
+}
+
+.accounting-fiscal-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.accounting-fiscal-card {
+  background: #f8fafc;
+}
+
+.accounting-fiscal-card header > div {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.accounting-fiscal-actions {
+  margin-top: 12px;
+}
+
+.fiscal-status-open {
+  color: #246757;
+  background: var(--green-soft);
+  border-color: #bddfd6;
+}
+
+.fiscal-status-soft_closed {
+  color: #89621d;
+  background: var(--amber-soft);
+  border-color: #ead4a9;
+}
+
+.fiscal-status-final_closed {
+  color: #6a3d48;
+  background: #f3e9ed;
+  border-color: #ddc8d0;
+}
+
+.accounting-report-result .form-section-heading > svg {
+  margin-bottom: 8px;
+  color: var(--blue);
+}
+
+.ledger-opening {
+  width: min(420px, 100%);
+  margin: 15px auto;
+  background: #eef6f3;
+  border-color: #c5ddd5;
+}
+
+.balance-credit {
+  color: #914147 !important;
+  font-weight: 700;
+}
+
+.balance-debit {
+  color: #236958 !important;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .accounting-fiscal-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accounting-filter-card,
+  .accounting-report-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accounting-filter-actions,
+  .accounting-report-actions {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 820px) {
+  .accounting-section-heading {
+    padding: 58px 16px 16px;
+    grid-template-columns: 1fr;
+  }
+
+  .accounting-section-heading .context-help-button {
+    top: 14px;
+    left: 14px;
+  }
+
+  .accounting-section-heading .heading-actions {
+    justify-content: center;
+  }
+
+  .accounting-fiscal-form-grid,
+  .journal-header-grid,
+  .journal-line-grid,
+  .accounting-detail-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .journal-description,
+  .journal-account-field,
+  .journal-line-description {
+    grid-column: 1 / -1;
+  }
+
+  .journal-lines-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .accounting-reverse-form {
+    grid-template-columns: 1fr;
+  }
+
+  .accounting-reverse-form .button {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .accounting-tabs {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: stretch;
+  }
+
+  .accounting-tabs button {
+    min-width: max-content;
+    flex: 1;
+    padding-inline: 14px;
+  }
+
+  .accounting-form-card,
+  .accounting-detail-card,
+  .accounting-report-result {
+    padding: 15px;
+  }
+
+  .accounting-fiscal-form-grid,
+  .journal-header-grid,
+  .journal-line-grid,
+  .accounting-filter-card,
+  .accounting-report-filter,
+  .accounting-detail-summary,
+  .journal-totals,
+  .accounting-fiscal-list {
+    grid-template-columns: 1fr;
+  }
+
+  .journal-description,
+  .journal-account-field,
+  .journal-line-description,
+  .accounting-report-account,
+  .accounting-detail-summary .wide-summary,
+  .journal-totals p {
+    grid-column: 1;
+  }
+
+  .journal-editor-heading,
+  .accounting-detail-heading {
+    padding-inline: 0 !important;
+  }
+
+  .accounting-table-desktop {
+    display: none;
+  }
+
+  .accounting-cards-mobile {
+    display: grid;
+    gap: 12px;
+  }
+
+  .accounting-journal-card dl,
+  .accounting-report-card dl,
+  .accounting-fiscal-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .accounting-form-actions .button,
+  .accounting-detail-actions .button,
+  .accounting-fiscal-actions .button,
+  .accounting-filter-actions .button,
+  .accounting-report-actions .button {
+    width: 100%;
+  }
+}
+.financial-statement-result {
+  display: grid;
+  gap: 18px;
+}
+
+.financial-statement-heading {
+  position: relative;
+  min-height: 88px;
+  padding: 18px 58px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.financial-statement-heading .context-help-button {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+}
+
+.financial-statement-heading > div {
+  width: 100%;
+}
+
+.financial-statement-grid {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+
+.profit-loss-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.balance-sheet-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.financial-statement-block {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d7e0e8;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.financial-statement-block h4 {
+  margin: 0;
+  padding: 14px;
+  border-bottom: 1px solid #d7e0e8;
+  color: #26384a;
+  text-align: center;
+}
+
+.statement-income {
+  background: #f2f8f6;
+}
+
+.statement-expense {
+  background: #faf5f5;
+}
+
+.statement-asset {
+  background: #f3f7fb;
+}
+
+.statement-liability {
+  background: #faf6ef;
+}
+
+.statement-equity {
+  background: #f6f4fa;
+}
+
+.financial-statement-table {
+  min-width: 100%;
+}
+
+.financial-statement-table th,
+.financial-statement-table td {
+  text-align: center;
+}
+
+.financial-statement-table td:last-child {
+  direction: rtl;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.financial-statement-block footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border-top: 1px solid #d7e0e8;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.financial-statement-block footer strong {
+  direction: rtl;
+  text-align: left;
+}
+
+.financial-statement-empty {
+  min-height: 90px;
+  margin: 0;
+  padding: 24px 14px;
+  color: #617284;
+  line-height: 1.9;
+  text-align: center;
+}
+
+.financial-statement-cards {
+  display: none;
+}
+
+.financial-statement-net,
+.balance-sheet-equation {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 16px 18px;
+  border: 1px solid #cbd9e3;
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.financial-statement-net {
+  flex-direction: column;
+}
+
+.financial-statement-net strong,
+.balance-sheet-equation strong {
+  direction: rtl;
+  font-size: 1.1rem;
+}
+
+.financial-statement-net.is-profit,
+.balance-sheet-equation.is-balanced {
+  background: #edf7f3;
+  border-color: #b9ddd0;
+  color: #235f50;
+}
+
+.financial-statement-net.is-loss,
+.balance-sheet-equation.is-unbalanced {
+  background: #fbefef;
+  border-color: #e7c2c5;
+  color: #873b43;
+}
+
+.balance-sheet-equation > div {
+  display: grid;
+  gap: 6px;
+}
+
+.balance-sheet-equation svg {
+  flex: 0 0 auto;
+}
+
+.balance-sheet-equation small {
+  color: inherit;
+}
+
+@media (max-width: 1100px) {
+  .balance-sheet-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .profit-loss-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .financial-statement-heading {
+    padding: 56px 12px 14px;
+    grid-template-columns: 1fr;
+  }
+
+  .financial-statement-cards {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .financial-statement-cards article {
+    padding: 12px;
+    border: 1px solid #d7e0e8;
+    border-radius: 10px;
+    display: grid;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.72);
+    text-align: center;
+  }
+
+  .financial-statement-cards article span {
+    color: #657688;
+  }
+
+  .financial-statement-cards article b {
+    direction: rtl;
+  }
+
+  .financial-statement-block footer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .balance-sheet-equation {
+    align-items: center;
+    flex-direction: column;
+  }
+}

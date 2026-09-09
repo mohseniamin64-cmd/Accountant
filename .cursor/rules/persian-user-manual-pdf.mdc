@@ -1,0 +1,14 @@
+---
+description: Maintain a complete Persian PDF user manual for the accounting application
+alwaysApply: true
+---
+
+# Persian User Manual PDF
+
+- Maintain a complete RTL Persian user manual describing how to use the application.
+- Treat the manual as a required product artifact, not optional documentation.
+- Cover installation and connection, initial setup, login, roles and permissions, accounting, purchases, sales, warehouses, production, treasury, warranty, service, settings, backup, printing, and troubleshooting as those features become available.
+- Explain workflows according to real implemented behavior; do not document planned, fake, or inactive capabilities as available.
+- Keep an editable source document in the repository and generate a visually verified PDF from it.
+- Update the relevant manual sections whenever a user-facing workflow or business rule changes.
+- Before a release is declared complete, verify RTL layout, Persian fonts, screenshots, page numbering, table of contents, readability, and agreement with the current application.

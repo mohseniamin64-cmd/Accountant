@@ -1,0 +1,20 @@
+---
+description: Enforce Persian Jalali dates across the complete application
+alwaysApply: true
+---
+
+# Persian Jalali Dates
+
+- Every user-visible date must be entered and displayed in the Persian Jalali calendar.
+- Apply this to forms, filters, tables, cards, dashboards, reports, print layouts, PDF files, exports, notifications, help text, and the user manual.
+- Never use the browser-native input type=date because it exposes a Gregorian calendar.
+- Use the shared JalaliDateField for date inputs and the shared Jalali formatting helpers for output.
+- Date inputs must accept Persian and Latin digits in YYYY/MM/DD form and show a clear Persian validation error.
+- Show Persian digits in default values and placeholders.
+- Store date-only values internally as canonical Gregorian ISO YYYY-MM-DD and timestamps as standard UTC values.
+- Convert Jalali input to ISO only at the UI/API boundary; never store a formatted Jalali string as an operational database date.
+- Perform sorting, date arithmetic, due-date checks, fiscal validation, and database queries on canonical internal values.
+- Convert internal values back to Jalali before they reach any visible user interface.
+- Do not expose Gregorian values in validation messages or user-facing logs.
+- Add conversion tests for known dates, leap/invalid dates, Persian digits, and round trips.
+- Keep all page help and the Persian PDF manual synchronized with this rule.

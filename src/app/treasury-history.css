@@ -1,0 +1,283 @@
+.treasury-history-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.reverse-panel {
+  padding: clamp(17px, 3vw, 24px);
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(170px, 220px);
+  gap: 16px;
+  align-items: start;
+  background: #fff7f4;
+  border: 1px solid #e8cfc5;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgb(70 40 30 / 4%);
+}
+
+.reverse-panel > div:first-child strong {
+  color: #773f35;
+}
+
+.reverse-panel > div:first-child p {
+  margin: 5px 0 0;
+  color: #80665f;
+  font-size: 0.79rem;
+  line-height: 1.8;
+}
+
+.reverse-panel .field + .field {
+  margin-top: 0;
+}
+
+.reverse-reason,
+.reverse-panel .form-actions {
+  grid-column: 1 / -1;
+}
+
+.reverse-panel textarea {
+  min-height: 78px;
+}
+
+.danger-action {
+  color: #843838;
+  background: #fff4f4;
+  border-color: #e8bebe;
+}
+
+.status-received,
+.status-issued {
+  color: #315f7e;
+  background: #e8f1f7;
+  border-color: #d2e3ef;
+}
+
+.status-deposited {
+  color: #875c1e;
+  background: #fff7e8;
+  border-color: #ead8b7;
+}
+
+.status-cleared {
+  color: #246757;
+  background: var(--green-soft);
+  border-color: #bddfd6;
+}
+
+.status-bounced,
+.status-cancelled {
+  color: #843838;
+  background: var(--red-soft);
+  border-color: #efc8c8;
+}
+
+.status-returned {
+  color: #5d4b86;
+  background: #f1edf8;
+  border-color: #d9d0e8;
+}
+
+.cheque-event-panel {
+  padding: clamp(17px, 3vw, 24px);
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(170px, 240px);
+  gap: 16px;
+  align-items: start;
+  background: #f3f8fb;
+  border: 1px solid #cbdde7;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgb(35 63 78 / 5%);
+}
+
+.cheque-event-heading strong {
+  color: #28566f;
+}
+
+.cheque-event-heading p {
+  margin: 5px 0 0;
+  color: #607988;
+  font-size: 0.79rem;
+  line-height: 1.8;
+}
+
+.cheque-event-panel .field + .field {
+  margin-top: 0;
+}
+
+.cheque-event-notes,
+.cheque-event-panel .form-actions {
+  grid-column: 1 / -1;
+}
+
+.cheque-event-panel textarea {
+  min-height: 78px;
+}
+
+.cheque-action-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.cheque-action-list .table-action {
+  white-space: nowrap;
+}
+
+.cheque-event-history {
+  margin: 16px clamp(12px, 2vw, 20px) clamp(12px, 2vw, 20px);
+  padding: clamp(16px, 2.5vw, 22px);
+  background: #f5f9fa;
+  border: 1px solid #ccdde1;
+  border-radius: 15px;
+  box-shadow: 0 5px 18px rgb(30 61 70 / 5%);
+}
+
+.cheque-event-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cheque-event-history-heading strong {
+  color: #254f5a;
+}
+
+.cheque-event-history-heading span {
+  color: #60777d;
+  font-size: 0.8rem;
+}
+
+.cheque-history-message {
+  padding: 16px;
+  color: #5b7076;
+  text-align: center;
+  background: #fbfdfd;
+  border: 1px dashed #cbdadd;
+  border-radius: 11px;
+}
+
+.cheque-history-message.error {
+  color: #843838;
+  background: #fff6f6;
+  border-color: #e6bebe;
+}
+
+.cheque-event-timeline {
+  display: grid;
+  gap: 11px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cheque-event-timeline > li {
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #d7e3e5;
+  border-right: 4px solid #6f9fac;
+  border-radius: 12px;
+}
+
+.cheque-event-timeline > li.is-reversed {
+  background: #fff9f7;
+  border-color: #e5cbc3;
+  border-right-color: #b47767;
+}
+
+.cheque-event-timeline-title,
+.cheque-event-transition,
+.cheque-event-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.cheque-event-timeline-title {
+  justify-content: space-between;
+}
+
+.cheque-event-timeline-title strong {
+  color: #244e59;
+}
+
+.cheque-event-timeline-title > span {
+  color: #62777c;
+  font-size: 0.78rem;
+}
+
+.cheque-event-transition {
+  margin-top: 8px;
+  color: #405d64;
+  font-size: 0.8rem;
+}
+
+.cheque-event-transition span:not([aria-hidden]) {
+  padding: 3px 8px;
+  background: #edf4f5;
+  border: 1px solid #d8e4e6;
+  border-radius: 999px;
+}
+
+.cheque-event-meta {
+  margin-top: 9px;
+  color: #61757a;
+  font-size: 0.76rem;
+}
+
+.cheque-event-note,
+.cheque-event-reversal p {
+  margin: 9px 0 0;
+  color: #475e64;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.cheque-event-reversal {
+  display: grid;
+  gap: 4px;
+  margin-top: 11px;
+  padding: 10px 12px;
+  color: #765248;
+  font-size: 0.78rem;
+  background: #fff1ec;
+  border: 1px solid #e8cdc4;
+  border-radius: 10px;
+}
+
+.cheque-event-reversal strong {
+  color: #7d4337;
+}
+
+@media (max-width: 680px) {
+  .cheque-event-history-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cheque-event-timeline-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cheque-event-history {
+    margin-inline: 10px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 680px) {
+  .reverse-panel,
+  .cheque-event-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .reverse-reason,
+  .reverse-panel .form-actions,
+  .cheque-event-notes,
+  .cheque-event-panel .form-actions {
+    grid-column: auto;
+  }
+}

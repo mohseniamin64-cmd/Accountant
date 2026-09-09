@@ -1,0 +1,1026 @@
+.service-page {
+  display: grid;
+  gap: 20px;
+}
+
+.service-page > .page-heading {
+  margin-bottom: 0;
+}
+
+.service-page .heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.service-page .button svg,
+.service-search-input svg,
+.service-segmented svg {
+  width: 18px;
+  height: 18px;
+}
+
+.service-reception-card {
+  margin: 0;
+  background: #f8fbfd;
+  border-color: #cfdae3;
+}
+
+.service-reception-fields {
+  margin-top: 18px;
+}
+
+.service-lookup-result {
+  margin-top: 18px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  color: #1e3e52;
+  background: #edf5f7;
+  border: 1px solid #c6dadd;
+  border-radius: 15px;
+}
+
+.service-lookup-result > svg {
+  width: 42px;
+  height: 42px;
+  padding: 9px;
+  color: #216b63;
+  background: #d9ece8;
+  border-radius: 12px;
+}
+
+.service-lookup-result dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
+}
+
+.service-lookup-result dl div {
+  min-width: 0;
+}
+
+.service-lookup-result dt,
+.service-summary-grid dt,
+.service-mobile-list dt,
+.service-complaint dt {
+  color: #657485;
+  font-size: 0.76rem;
+}
+
+.service-lookup-result dd,
+.service-summary-grid dd,
+.service-mobile-list dd,
+.service-complaint dd {
+  min-width: 0;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: #172b3b;
+  font-weight: 700;
+}
+
+.service-good {
+  color: #23695b !important;
+}
+
+.service-warning {
+  color: #9a5a23 !important;
+}
+
+.service-queue-card,
+.service-detail-card {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d4dee7;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(30, 59, 79, 0.07);
+}
+
+.service-panel-heading {
+  direction: ltr;
+  min-height: 74px;
+  padding: 15px 18px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-areas: "help title icon";
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  background: #f1f6f9;
+  border-bottom: 1px solid #d6e0e7;
+}
+
+.service-panel-heading > .context-help-trigger {
+  grid-area: help;
+  align-self: center;
+}
+
+.service-panel-heading > div {
+  direction: rtl;
+  grid-area: title;
+  min-width: 0;
+}
+
+.service-panel-heading > svg {
+  grid-area: icon;
+  justify-self: end;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  color: #376f91;
+  background: #dceaf2;
+  border-radius: 12px;
+}
+
+.service-panel-heading h2,
+.service-panel-heading h3 {
+  margin: 0;
+  color: #183448;
+  font-size: 1.06rem;
+  text-align: center;
+}
+
+.service-panel-heading p {
+  margin: 5px 0 0;
+  color: #687989;
+  font-size: 0.79rem;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.service-toolbar {
+  padding: 15px 18px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 0.7fr) auto;
+  align-items: end;
+  gap: 13px;
+  background: #fbfcfd;
+  border-bottom: 1px solid #e0e7ec;
+}
+
+.service-toolbar .field + .field {
+  margin-top: 0;
+}
+
+.service-search-input {
+  position: relative;
+  display: block;
+}
+
+.service-search-input svg {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: #718294;
+  pointer-events: none;
+}
+
+.service-search-input input {
+  padding-right: 43px;
+}
+
+.service-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.service-cell-note {
+  margin-top: 5px;
+  display: block;
+  color: #748392;
+  font-size: 0.74rem;
+  direction: ltr;
+}
+
+.service-mobile-list {
+  display: none;
+}
+
+.service-detail-card {
+  margin-top: 20px;
+}
+
+.service-detail-header {
+  min-height: 110px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(120px, auto);
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #244f6c, #18384e);
+}
+
+.service-detail-header .icon-button {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.service-detail-header > div {
+  text-align: center;
+}
+
+.service-detail-header p,
+.service-detail-header h2 {
+  margin: 0;
+  text-align: center;
+}
+
+.service-detail-header p {
+  color: #c9dce8;
+  font-size: 0.8rem;
+}
+
+.service-detail-header h2 {
+  margin-top: 4px;
+  font-size: 1.35rem;
+}
+
+.service-detail-header div > span {
+  margin-top: 5px;
+  display: block;
+  color: #d8e6ee;
+  direction: ltr;
+}
+
+.service-detail-header > .status-pill {
+  justify-self: end;
+  color: #173a4e;
+  background: #e7f2f6;
+  border-color: #c4d9e2;
+}
+
+.service-summary-grid {
+  padding: 17px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  background: #f6f9fb;
+  border-bottom: 1px solid #dbe4ea;
+}
+
+.service-summary-grid dl {
+  min-width: 0;
+  margin: 0;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 12px;
+  align-content: start;
+  background: #fff;
+  border: 1px solid #d8e2e9;
+  border-radius: 13px;
+}
+
+.service-summary-grid dd {
+  text-align: left;
+}
+
+.service-complaint {
+  margin: 17px;
+  padding: 16px;
+  background: #fffaf1;
+  border: 1px solid #eadbc1;
+  border-radius: 14px;
+}
+
+.service-complaint h3 {
+  margin: 0;
+  color: #6f4f22;
+  text-align: center;
+}
+
+.service-complaint > p {
+  margin: 10px 0 14px;
+  color: #3f3a32;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.service-complaint dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.service-complaint dl div {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 10px;
+}
+
+.tracking-code {
+  direction: ltr;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.service-detail-card > .form-message {
+  margin-inline: 17px;
+}
+
+.service-action-panel {
+  margin: 17px;
+  overflow: hidden;
+  background: #f9fbfc;
+  border: 1px solid #d5e0e7;
+  border-radius: 16px;
+}
+
+form.service-action-panel > .form-grid,
+form.service-action-panel > .service-segmented,
+form.service-action-panel > .service-inline-note,
+form.service-action-panel > .form-actions {
+  margin-inline: 16px;
+}
+
+form.service-action-panel > .form-grid {
+  padding-top: 16px;
+}
+
+form.service-action-panel > .form-actions {
+  padding-bottom: 16px;
+}
+
+.service-inline-note {
+  margin-block: 12px 0;
+  padding: 9px 12px;
+  color: #4f6473;
+  background: #edf3f6;
+  border: 1px solid #d4e0e6;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.service-segmented {
+  margin-top: 16px;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #e8eff3;
+  border-radius: 11px;
+}
+
+.service-segmented button {
+  min-height: 42px;
+  color: #4b6272;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.service-segmented button.active {
+  color: #214e6b;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(34, 65, 85, 0.1);
+}
+
+.service-charge-field {
+  align-self: end;
+  min-height: 46px;
+}
+
+.service-parts-list {
+  padding: 14px;
+  display: grid;
+  gap: 9px;
+}
+
+.service-parts-list article {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) minmax(100px, 0.5fr) minmax(150px, 0.7fr);
+  gap: 12px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dce5ea;
+  border-radius: 11px;
+}
+
+.service-parts-list article > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.service-parts-list strong,
+.service-parts-list b {
+  overflow-wrap: anywhere;
+  color: #233c4d;
+}
+
+.service-parts-list span {
+  color: #74828f;
+  font-size: 0.75rem;
+}
+
+.service-warranty-card {
+  margin: 17px;
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #205e52;
+  background: #edf7f4;
+  border: 1px solid #c7e1da;
+  border-radius: 15px;
+}
+
+.service-warranty-card > svg {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  padding: 8px;
+  background: #d5ece6;
+  border-radius: 12px;
+}
+
+.service-warranty-card h3,
+.service-warranty-card p {
+  margin: 0;
+}
+
+.service-warranty-card h3 {
+  text-align: center;
+}
+
+.service-warranty-card p {
+  margin-top: 5px;
+}
+
+.service-warranty-card span {
+  margin-top: 5px;
+  display: block;
+  color: #54766f;
+  font-size: 0.8rem;
+}
+
+.service-timeline {
+  margin: 0;
+  padding: 16px 28px 18px 16px;
+  list-style: none;
+}
+
+.service-timeline li {
+  position: relative;
+  min-height: 78px;
+  padding: 0 28px 18px 0;
+  border-right: 2px solid #cfdae1;
+}
+
+.service-timeline li:last-child {
+  min-height: 0;
+  border-right-color: transparent;
+}
+
+.service-timeline li > span {
+  position: absolute;
+  top: 3px;
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  background: #4d88ad;
+  border: 3px solid #e6f0f5;
+  border-radius: 50%;
+}
+
+.service-timeline strong {
+  color: #24465c;
+}
+
+.service-timeline p {
+  margin: 5px 0;
+  color: #4e606e;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.service-timeline time {
+  color: #7b8994;
+  font-size: 0.75rem;
+}
+
+.status-pill.service-status-received {
+  color: #315d7d;
+  background: #e8f1f7;
+  border-color: #c5dbe8;
+}
+
+.status-pill.service-status-diagnosis,
+.status-pill.service-status-repairing {
+  color: #315b83;
+  background: #e5eef9;
+  border-color: #c5d7ec;
+}
+
+.status-pill.service-status-waiting_customer,
+.status-pill.service-status-waiting_part {
+  color: #855d22;
+  background: #fff4dd;
+  border-color: #ecd49f;
+}
+
+.status-pill.service-status-final_test {
+  color: #624b88;
+  background: #f0ebf8;
+  border-color: #d9ccef;
+}
+
+.status-pill.service-status-ready_delivery,
+.status-pill.service-status-delivered {
+  color: #246456;
+  background: #e7f5f1;
+  border-color: #c2dfd7;
+}
+
+.status-pill.service-status-cancelled {
+  color: #824343;
+  background: #f9e9e9;
+  border-color: #ebc7c7;
+}
+
+.service-action-panel a {
+  color: #245f93;
+  font-weight: 700;
+}
+
+@media (max-width: 1050px) {
+  .service-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .service-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .service-toolbar-actions {
+    grid-column: 1 / -1;
+  }
+
+  .service-lookup-result dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .service-page {
+    gap: 14px;
+  }
+
+  .service-toolbar,
+  .service-summary-grid,
+  .service-complaint dl,
+  .service-lookup-result dl {
+    grid-template-columns: 1fr;
+  }
+
+  .service-toolbar-actions,
+  .service-toolbar-actions .button {
+    width: 100%;
+  }
+
+  .service-toolbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .service-desktop-list {
+    display: none;
+  }
+
+  .service-mobile-list {
+    padding: 12px;
+    display: grid;
+    gap: 11px;
+  }
+
+  .service-mobile-list article {
+    padding: 14px;
+    background: #f8fafb;
+    border: 1px solid #d7e0e6;
+    border-radius: 14px;
+  }
+
+  .service-mobile-list header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .service-mobile-list header > div {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  .service-mobile-list header strong,
+  .service-mobile-list header span {
+    overflow-wrap: anywhere;
+  }
+
+  .service-mobile-list header > div > span {
+    color: #657585;
+    font-size: 0.8rem;
+  }
+
+  .service-mobile-list dl {
+    margin: 14px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .service-mobile-list dl div {
+    padding: 9px;
+    background: #fff;
+    border-radius: 9px;
+  }
+
+  .service-mobile-list .button {
+    width: 100%;
+  }
+
+  .service-detail-header {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .service-detail-header > .status-pill {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  .service-parts-list article {
+    grid-template-columns: 1fr;
+  }
+
+  .service-panel-heading {
+    padding-inline: 12px;
+    gap: 7px;
+  }
+}
+
+@media (max-width: 520px) {
+  .service-summary-grid,
+  .service-complaint,
+  .service-action-panel,
+  .service-warranty-card {
+    margin: 11px;
+  }
+
+  .service-summary-grid {
+    padding: 11px;
+  }
+
+  .service-toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .service-mobile-list dl {
+    grid-template-columns: 1fr;
+  }
+
+  .service-segmented {
+    grid-template-columns: 1fr;
+  }
+
+  .service-detail-header {
+    padding: 16px 12px;
+  }
+
+  .service-detail-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .service-panel-heading h2,
+  .service-panel-heading h3 {
+    font-size: 0.95rem;
+  }
+
+  .service-panel-heading p {
+    font-size: 0.73rem;
+  }
+
+  .service-panel-heading > svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .service-timeline {
+    padding-left: 11px;
+  }
+}
+
+.service-public-page {
+  min-height: 100vh;
+  padding: clamp(16px, 4vw, 46px);
+  display: grid;
+  place-items: start center;
+  background: #edf3f6;
+}
+
+.service-public-shell {
+  width: min(920px, 100%);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #cfdbe3;
+  border-radius: 24px;
+  box-shadow: 0 18px 52px rgba(24, 53, 72, 0.12);
+}
+
+.service-public-header {
+  direction: ltr;
+  min-height: 150px;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  grid-template-areas: "help title secure";
+  align-items: center;
+  gap: 14px;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(135deg, #244f6c, #18384e);
+}
+
+.service-public-header > .context-help-trigger {
+  grid-area: help;
+  align-self: start;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.service-public-header > div {
+  direction: rtl;
+  grid-area: title;
+}
+
+.service-public-header > div > svg {
+  width: 42px;
+  height: 42px;
+  padding: 9px;
+  color: #244f6c;
+  background: #e7f2f6;
+  border-radius: 13px;
+}
+
+.service-public-header > svg {
+  grid-area: secure;
+  justify-self: end;
+  width: 42px;
+  height: 42px;
+  color: #bcd7e6;
+}
+
+.service-public-header h1,
+.service-public-header p {
+  margin: 0;
+  text-align: center;
+}
+
+.service-public-header h1 {
+  margin-top: 4px;
+  font-size: clamp(1.35rem, 4vw, 1.85rem);
+}
+
+.service-public-header p {
+  margin-top: 7px;
+  color: #c7dbe7;
+  font-size: 0.82rem;
+}
+
+.service-public-search {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  background: #f8fafb;
+  border-bottom: 1px solid #dce5ea;
+}
+
+.service-public-search .button {
+  min-height: 46px;
+}
+
+.service-public-shell > .form-message {
+  margin-inline: 20px;
+}
+
+.service-public-result {
+  padding: 20px;
+  display: grid;
+  gap: 18px;
+}
+
+.service-public-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.service-public-overview > div {
+  min-width: 0;
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+  background: #f1f6f8;
+  border: 1px solid #d4e0e6;
+  border-radius: 12px;
+}
+
+.service-public-overview span {
+  color: #6c7c89;
+  font-size: 0.76rem;
+}
+
+.service-public-overview strong {
+  overflow-wrap: anywhere;
+  color: #1e3b4d;
+}
+
+.service-public-timeline {
+  overflow: hidden;
+  background: #fbfcfd;
+  border: 1px solid #d7e1e7;
+  border-radius: 15px;
+}
+
+.service-public-timeline h2 {
+  margin: 0;
+  padding: 15px;
+  color: #24465c;
+  text-align: center;
+  background: #edf4f7;
+  border-bottom: 1px solid #d7e1e7;
+}
+
+.service-public-timeline ol {
+  margin: 0;
+  padding: 18px 30px 8px 18px;
+  list-style: none;
+}
+
+.service-public-timeline li {
+  position: relative;
+  min-height: 62px;
+  padding: 0 26px 16px 0;
+  border-right: 2px solid #cbd9e1;
+}
+
+.service-public-timeline li:last-child {
+  border-right-color: transparent;
+}
+
+.service-public-timeline li > span {
+  position: absolute;
+  top: 3px;
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  background: #4d88ad;
+  border: 3px solid #e6f0f5;
+  border-radius: 50%;
+}
+
+.service-public-timeline li div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.service-public-timeline strong {
+  color: #284b61;
+}
+
+.service-public-timeline time {
+  color: #748590;
+  font-size: 0.75rem;
+}
+
+.service-public-placeholder {
+  min-height: 230px;
+  padding: 30px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 13px;
+  color: #687a87;
+  text-align: center;
+}
+
+.service-public-placeholder svg {
+  width: 56px;
+  height: 56px;
+  padding: 12px;
+  color: #477a98;
+  background: #e8f1f5;
+  border-radius: 17px;
+}
+
+.service-public-placeholder p {
+  margin: 0;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .service-public-page {
+    padding: 10px;
+  }
+
+  .service-public-shell {
+    border-radius: 17px;
+  }
+
+  .service-public-search,
+  .service-public-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .service-public-search .button {
+    width: 100%;
+  }
+
+  .service-public-result {
+    padding: 13px;
+  }
+
+  .service-public-timeline li div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+.service-attachment-form {
+  padding: 16px;
+  border-bottom: 1px solid #d9e3e9;
+}
+
+.service-attachment-form .form-actions {
+  margin-top: 14px;
+}
+
+.service-attachment-list {
+  padding: 14px;
+  display: grid;
+  gap: 9px;
+}
+
+.service-attachment-list article {
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  background: #fff;
+  border: 1px solid #dbe5ea;
+  border-radius: 11px;
+}
+
+.service-attachment-list article > svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  color: #496f87;
+  background: #eaf1f5;
+  border-radius: 10px;
+}
+
+.service-attachment-list article > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.service-attachment-list strong,
+.service-attachment-list span {
+  overflow-wrap: anywhere;
+}
+
+.service-attachment-list strong {
+  color: #233f51;
+}
+
+.service-attachment-list span {
+  color: #72818d;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 560px) {
+  .service-attachment-list article {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .service-attachment-list .button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}

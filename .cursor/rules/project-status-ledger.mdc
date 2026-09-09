@@ -1,0 +1,19 @@
+---
+description: Keep the project status ledger accurate and use it as the mandatory handoff point
+alwaysApply: true
+---
+
+# Project Status Ledger
+
+- `PROJECT_STATUS.md` is the single canonical progress, roadmap, decision, and handoff ledger.
+- Read it completely before project work or a broad repository scan.
+- Resume from its exact checkpoint and inspect only relevant code and dependencies unless evidence requires more.
+- Verify code, migrations, and tests; if they disagree with the ledger, correct the ledger immediately.
+- Before ending or pausing a turn that changes code, requirements, decisions, tests, progress, or next action, update the ledger.
+- Also update it before handoff, expected usage-limit stop, or stage completion.
+- Keep the Jalali date, estimates, module table, checklists, checkpoint, files, tests, risks, and decisions accurate.
+- Check an item only after real implementation and proportionate verification.
+- Record unfinished work, exact first next action, and blockers.
+- Keep one current state and concise history; do not create competing status files.
+- Never store secrets, customer data, or production backups.
+- A question-only turn with no project-state change needs no cosmetic edit.

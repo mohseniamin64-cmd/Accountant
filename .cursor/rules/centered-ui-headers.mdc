@@ -1,0 +1,14 @@
+---
+description: Keep every user-interface header visually centered across the application
+alwaysApply: true
+---
+
+# Centered UI Headers
+
+- Center all visible header and title text throughout the application.
+- This includes page, section, card, modal, drawer, panel, table, and form headers.
+- Centering must remain visually exact in RTL layouts even when actions or icons exist on either side.
+- Use a balanced layout such as a three-column grid so side controls do not shift the title away from the true center.
+- Preserve centered headers on mobile, tablet, desktop, print, and PDF views.
+- Do not apply this rule to body copy, form labels, table cells, or ordinary content unless the design explicitly requires it.
+- Any new or modified screen must be checked at mobile and desktop widths for true header centering.

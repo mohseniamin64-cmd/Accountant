@@ -1,0 +1,113 @@
+.treasury-cheque-overview {
+  display: grid;
+  gap: 14px;
+}
+
+.treasury-cheque-overview-heading h2 {
+  margin: 0;
+  color: #263f47;
+  font-size: 1rem;
+}
+
+.treasury-cheque-overview-heading p {
+  margin: 5px 0 0;
+  color: #667a80;
+  font-size: 0.78rem;
+  line-height: 1.8;
+}
+
+.treasury-cheque-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.treasury-cheque-overview-card {
+  min-width: 0;
+  padding: 16px;
+  background: #f5f8f9;
+  border: 1px solid #d5e0e3;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgb(36 58 65 / 4%);
+}
+
+.treasury-cheque-overview-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.treasury-cheque-overview-card-heading strong {
+  color: #344e56;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.treasury-cheque-overview-card-heading span {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  color: #50686f;
+  font-size: 0.72rem;
+  background: #e9f0f2;
+  border: 1px solid #d3e0e3;
+  border-radius: 999px;
+}
+
+.treasury-cheque-overview-card > b {
+  display: block;
+  margin-top: 13px;
+  color: #233d45;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.treasury-cheque-overview-card > p {
+  margin: 6px 0 0;
+  color: #687c82;
+  font-size: 0.73rem;
+  line-height: 1.7;
+}
+
+.treasury-cheque-overview-card.tone-warning {
+  background: #fbf8f1;
+  border-color: #e5d8bd;
+}
+
+.treasury-cheque-overview-card.tone-warning .treasury-cheque-overview-card-heading span {
+  color: #795b26;
+  background: #f3ead7;
+  border-color: #e4d2af;
+}
+
+.treasury-cheque-overview-card.tone-info {
+  background: #f1f7fa;
+  border-color: #ccdde6;
+}
+
+.treasury-cheque-overview-card.tone-danger {
+  background: #fbf4f3;
+  border-color: #e6ceca;
+}
+
+.treasury-cheque-overview-card.tone-danger .treasury-cheque-overview-card-heading span {
+  color: #7d443b;
+  background: #f4e4e1;
+  border-color: #e5c8c2;
+}
+
+@media (max-width: 1050px) {
+  .treasury-cheque-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 580px) {
+  .treasury-cheque-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-cheque-overview-card {
+    padding: 14px;
+  }
+}

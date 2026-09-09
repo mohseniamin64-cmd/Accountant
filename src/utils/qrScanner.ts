@@ -1,9 +1,30 @@
 import jsQR from 'jsqr';
 
+interface DetectedBarcode {
+  rawValue?: string;
+}
+
+interface BarcodeDetectorInstance {
+  detect(source: CanvasImageSource): Promise<DetectedBarcode[]>;
+}
+
+interface BarcodeDetectorConstructor {
+  new (options: {formats: string[]}): BarcodeDetectorInstance;
+}
+
+type ScannerWindow = Window & {
+  BarcodeDetector?: BarcodeDetectorConstructor;
+  webkitAudioContext?: typeof AudioContext;
+};
+
 // Audio Context beep generator
-export function playScanBeepSound() {
+export function playScanBeepSound(): void {
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const scannerWindow = window as ScannerWindow;
+    const AudioContextConstructor =
+      window.AudioContext ?? scannerWindow.webkitAudioContext;
+    if (!AudioContextConstructor) return;
+    const audioCtx = new AudioContextConstructor();
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -32,16 +53,18 @@ export async function scanImageData(canvas: HTMLCanvasElement): Promise<string |
   if (width === 0 || height === 0) return null;
 
   // 1. Try Native BarcodeDetector if available in modern browsers (Chrome, Edge, Android, etc.)
-  if ('BarcodeDetector' in window) {
+  const BarcodeDetector = (window as ScannerWindow).BarcodeDetector;
+  if (BarcodeDetector) {
     try {
-      const barcodeDetector = new (window as any).BarcodeDetector({
+      const barcodeDetector = new BarcodeDetector({
         formats: ['qr_code', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'data_matrix']
       });
       const barcodes = await barcodeDetector.detect(canvas);
-      if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-        return barcodes[0].rawValue;
+      const firstBarcode = barcodes[0];
+      if (firstBarcode?.rawValue) {
+        return firstBarcode.rawValue;
       }
-    } catch (err) {
+    } catch {
       // Fallback to jsQR
     }
   }
@@ -73,7 +96,7 @@ export async function scanImageData(canvas: HTMLCanvasElement): Promise<string |
 export function scanImageFile(file: File): Promise<string | null> {
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (event) => {
       const img = new Image();
       img.onload = async () => {
         const canvas = document.createElement('canvas');
@@ -89,7 +112,12 @@ export function scanImageFile(file: File): Promise<string | null> {
         }
       };
       img.onerror = () => resolve(null);
-      img.src = e.target?.result as string;
+      const result = event.target?.result;
+      if (typeof result !== 'string') {
+        resolve(null);
+        return;
+      }
+      img.src = result;
     };
     reader.onerror = () => resolve(null);
     reader.readAsDataURL(file);

@@ -182,7 +182,7 @@ export const P020BankAccounts: React.FC<P020BankAccountsProps> = ({
         isActive,
         posConnected,
         notes: notes.trim(),
-        createdAt: new Date().toLocaleDateString('fa-IR')
+        createdAt: new Date().toLocaleDateString('fa-IR-u-ca-persian')
       };
       setBankAccounts(prev => [newAcc, ...prev]);
       showToast('حساب بانکی جدید با موفقیت اضافه شد.', 'success');

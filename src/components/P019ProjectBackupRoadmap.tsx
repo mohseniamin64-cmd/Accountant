@@ -20,7 +20,7 @@ export const P019ProjectBackupRoadmap: React.FC<P019ProjectBackupRoadmapProps> =
   const jsonBackupData = {
     appName: "Diaco Electronics ERP & Warranty Management System",
     version: "2.4.0",
-    generatedAt: "1405/05/22 - 2026-08-12",
+    generatedAt: "۱۴۰۵/۰۵/۲۲",
     architecture: "React 18 + Vite + TypeScript + Tailwind CSS (RTL Persian)",
     terminologyStandard: "طرف حساب (Account Holder)",
     currency: "Toman (تومان)",
