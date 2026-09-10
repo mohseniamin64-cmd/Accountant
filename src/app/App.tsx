@@ -43,6 +43,8 @@ import type {
 import {api, errorMessage, getBootstrap, postJson} from './api.js';
 import {AccountingPage} from './AccountingPage.js';
 import {ContextHelpButton} from './ContextHelpButton.js';
+import {ThemeControl} from './ThemeControl.js';
+import {readThemeMode, type ThemeMode} from './theme.js';
 import {JalaliDateField} from './JalaliDateField.js';
 import {PasswordField} from './PasswordField.js';
 import {formatJalaliDate, jalaliInputToIso} from './jalali-date.js';
@@ -242,6 +244,8 @@ function SubmitMessage({
 function LoginPage({company, onAuthenticated}: LoginProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRecoveryHelp, setShowRecoveryHelp] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(readThemeMode);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -263,11 +267,11 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
   }
 
   return (
-    <main className="auth-page">
+    <main className={`auth-page ${theme === 'dark' ? 'theme-dark' : 'theme-light'}`}>
       <section className="auth-brand" aria-label="معرفی سامانه">
         <div className="brand-mark"><Building2 aria-hidden /></div>
-        <p>سامانه یکپارچه مدیریت مالی، تولید و خدمات</p>
         <h1>{company?.nameFa ?? 'دیاکو الکترونیکس'}</h1>
+        <p>سامانه یکپارچه مدیریت مالی، تولید و خدمات</p>
         <ul>
           <li><ShieldCheck aria-hidden /> دسترسی هر کاربر براساس نقش و مجوز</li>
           <li><Factory aria-hidden /> تولید، انبار و بهای تمام‌شده یکپارچه</li>
@@ -275,6 +279,9 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
         </ul>
       </section>
       <section className="auth-panel">
+        <div className="auth-theme-control">
+          <ThemeControl onThemeChanged={setTheme} />
+        </div>
         <form className="auth-card" onSubmit={submit}>
           <div className="mobile-brand">
             <div className="brand-mark"><Building2 aria-hidden /></div>
@@ -282,7 +289,6 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
           </div>
           <header className="auth-card-heading">
             <ContextHelpButton help={appHelp.login} />
-            <p>ورود امن به سامانه</p>
             <h2>خوش آمدید</h2>
           </header>
           <Field
@@ -301,6 +307,24 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
           <button className="button primary wide" disabled={pending} type="submit">
             {pending ? 'در حال بررسی…' : 'ورود به سامانه'}
           </button>
+          <button
+            className="auth-recovery-link"
+            type="button"
+            aria-expanded={showRecoveryHelp}
+            onClick={() => setShowRecoveryHelp((visible) => !visible)}
+          >
+            نام کاربری یا رمز عبور را فراموش کرده‌اید؟
+          </button>
+          {showRecoveryHelp ? (
+            <div className="auth-recovery-note" role="status">
+              <strong>بازیابی فقط از روی کامپیوتر سرور</strong>
+              <p>
+                ترمینال را با دسترسی مدیر ویندوز باز کنید و دستور زیر را در
+                پوشه برنامه اجرا کنید. هیچ اطلاعات مالی یا عملیاتی حذف نمی‌شود.
+              </p>
+              <code dir="ltr">npm run recovery</code>
+            </div>
+          ) : null}
         </form>
       </section>
     </main>
@@ -673,6 +697,7 @@ function AppShell({session, onSessionChanged}: ShellProps) {
           </div>
         </div>
         <div className="topbar-tools">
+
           <div className="unit-switch" aria-label="واحد نمایش مبلغ">
             <button
               type="button"
@@ -720,6 +745,7 @@ function AppShell({session, onSessionChanged}: ShellProps) {
             <X aria-hidden />
           </button>
         </div>
+
         <nav>
           {visibleNavigation.map((item) => {
             const Icon = item.icon;

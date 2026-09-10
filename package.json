@@ -7,6 +7,7 @@
     "dev": "tsx watch server/main.ts",
     "build": "vite build && esbuild server/main.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs && node scripts/copy-runtime-assets.mjs",
     "start": "node scripts/start-production.mjs",
+    "recovery": "tsx server/recovery/main.ts",
     "clean": "node scripts/clean.mjs",
     "db:migrate": "tsx server/db/migrate-cli.ts",
     "test": "vitest run",
