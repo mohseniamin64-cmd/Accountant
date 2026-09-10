@@ -252,6 +252,17 @@ svg {
   font-size: 1.7rem;
 }
 
+.auth-card .field > span,
+.auth-card .password-field > label {
+  text-align: center;
+}
+
+.auth-card .field > input,
+.auth-card .password-field input {
+  padding-inline: 56px;
+  text-align: center;
+}
+
 .mobile-brand {
   display: none;
 }
