@@ -13,6 +13,16 @@
 
 ## منابع تخصصی
 
+- [رودمپ تاریخی و آینده](ROADMAP.md)
+- [معماری فنی و شبکه](ARCHITECTURE.md)
+- [دفتر تصمیم‌های انتقال‌پذیر](DECISIONS.md)
+- [تاریخچه اجرای واقعی](IMPLEMENTATION.md)
+- [خطاها و رفع اشکال](TROUBLESHOOTING.md)
+- [راهنمای عملیات](RUNBOOK.md)
+- [نصب مجدد Windows](WINDOWS-REINSTALL.md)
+- [امنیت و کارهای باقیمانده](SECURITY-NEXT-STEPS.md)
+- [دیتابیس](DATABASE.md) · [استقرار](DEPLOYMENT.md) · [بکاپ و restore](BACKUP-RESTORE.md) · [تنظیمات](ENVIRONMENT.md) · [API](API.md)
+
 - [معماری و راه‌اندازی](docs/architecture-and-operations.md)
 - [آزمون‌ها و مشکلات شناخته‌شده](docs/verification-and-known-issues.md)
 - [راهنمای کاربری همه بخش‌ها](docs/user-manual.md)

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Project recovery documentation — 2026-09-25
+
+- Added root-level roadmap, architecture, decision log, implementation timeline, troubleshooting, runbook, Windows recovery, security follow-ups, database, deployment, backup/restore, environment, and API reference.
+- Recorded the observed Docker PostgreSQL 16 volume and local backup folder without storing their contents or credentials.
+- Explicitly recorded that current backup verification is not a full restore, that `.env.example` uses a stale 4173 port, and that the app was not listening during inspection.
+- Repository was public per owner statement. A heuristic secret-pattern scan over 11 Git commits found no matches; comprehensive secret scanning and isolated restore remain open.
+- The documentation is ready for commit and push after final verification. See [PROJECT_STATUS](PROJECT_STATUS.md) and [open recovery questions](WINDOWS-REINSTALL.md).
+
 ## مستندات — 2026-09-25
 
 - افزودن START_HERE و دفتر تصمیم‌های دسته‌بندی‌شده، قواعد، رودمپ و خلاصه تحویل.

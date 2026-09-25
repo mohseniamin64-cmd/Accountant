@@ -1,48 +1,58 @@
-# سامانه یکپارچه دیاکو
+# سامانه حسابداری شبکه‌ای دیاکو
 
-سامانه تحت وب شبکه داخلی برای حسابداری، خزانه، طرف‌حساب‌ها، کالا، شعب و انبارها، خرید، فروش، تولید، خدمات و گارانتی، تنظیمات، پشتیبان‌گیری، کاربران و ممیزی.
+مخزن اصلی کد پروژه: [Accountant](https://github.com/mohseniamin64-cmd/Accountant)، شاخه `main`. وضعیت مخزن در زمان نگارش طبق اعلام مالک عمومی است؛ دسترسی و visibility ممکن است بعداً عوض شود.
 
-این سند در ۲۰۲۶/۰۹/۲۵ با **بازخوانی کد** به‌روز شد. در این مأموریت برنامه، دیتابیس، آزمون‌ها یا health اجرا نشده‌اند. قابلیت موجود در کد با قابلیت آزموده‌شده در نصب زنده یکسان نیست.
+## هدف
 
-## از کجا شروع کنیم؟
+سامانه فارسی تحت وب برای حسابداری، خزانه، طرف‌حساب‌ها، کالا و خدمات، شعب و انبار، خرید و فروش، تولید، خدمات پس از فروش و گارانتی، تنظیمات، پشتیبان‌گیری، کاربران و ممیزی؛ طراحی برای اجرا روی سرور شرکت و استفاده در شبکه محلی.
 
-- [نقطه شروع پروژه](START_HERE.md) و [اسناد حاکمیت پروژه](docs/project-governance/)؛ مالک این اسناد عامل اصلی پروژه است.
-- [تصمیم‌های مصوب](docs/project-governance/decisions.md)، [رودمپ](docs/project-governance/roadmap.md)، [طرح آزمایش ظرفیت](docs/project-governance/capacity-lab.md) و [تحویل کار](docs/project-governance/handoff.md).
-- [راهنمای عملی همه بخش‌ها](docs/user-manual.md)
-- [معماری، نصب و عملیات امن](docs/architecture-and-operations.md)
-- [وضعیت بررسی‌ها و محدودیت‌های شناخته‌شده](docs/verification-and-known-issues.md)
-- [کاربران، مالک سامانه و تصمیم‌های سال مالی](docs/users-and-fiscal-years-guide.md)
-- [راهنمای بارکدخوان](docs/barcode-user-guide.md)
-- [برنامه تاریخی تکمیل خدمات](docs/service-completion-plan.md)؛ تیک‌های این سند گواه آزمون امروز نیستند.
+## وضعیت فعلی
 
-## اجرا و نصب
+مخزن کد و مستندات را نگه می‌دارد. دیتابیس زنده، Docker volume، `.env` واقعی، کلید رمزگذاری، پیوست‌ها، sessionها و فایل‌های backup داخل GitHub نیستند. کد وجود دارد اما ظرفیت یا سلامت نصب تضمین نشده است. آخرین ارزیابی میدانی این مستندات: PostgreSQL 16 در Docker volume `diaco-postgres-data` فعال بود؛ برنامه روی پورت‌های 3000، 4173 و 5000 در حال گوش‌دادن نبود؛ پنج فایل رمزگذاری‌شده در پوشه `data/backups` دیده شد. این مشاهده فقط وضعیت همان کامپیوتر در 2026-09-25 را نشان می‌دهد.
 
-مرجع دستورها [package.json](package.json)، [اسکریپت production](scripts/start-production.mjs) و [تنظیمات](server/config.ts) است. پیش‌نیازها Node.js سازگار با وابستگی‌های قفل‌شده، npm و PostgreSQL قابل دسترس‌اند. نسخه دقیق runtime نصب زنده در این مأموریت اندازه‌گیری نشده است.
+**نکته بازیابی:** مخزن به‌تنهایی نسخه پشتیبان اطلاعات شرکت نیست. برنامه «اعتبارسنجی» dump را انجام می‌دهد، ولی مسیر بازیابی کامل و آزموده‌شده ندارد. پیش از پاک‌کردن ویندوز، راهنمای [WINDOWS-REINSTALL.md](WINDOWS-REINSTALL.md) و [BACKUP-RESTORE.md](BACKUP-RESTORE.md) را بخوانید. تا زمان اجرای یک restore واقعی در محیط جدا، بازیابی عملی تأییدشده نیست.
 
-پس از تأمین تنظیم معتبر اتصال از مسئول نصب، در ریشه پروژه:
+## معماری در یک نگاه
 
-```text
-npm install
-npm run db:migrate
+- Frontend: React 19، TypeScript، Vite 6، React Router.
+- Backend: Node.js و Express 4، APIهای REST زیر `/api`.
+- Database: PostgreSQL؛ در نصب مشاهده‌شده image `postgres:16-alpine` با Docker volume پایدار.
+- Production: `npm run build` سپس `npm start`؛ پورت پیش‌فرض production برابر 5000 و توسعه 3000 است. `.env.example` مقدار قدیمی 4173 دارد.
+- وضعیت شبکه، Docker و تنظیمات نصب در [ARCHITECTURE.md](ARCHITECTURE.md) و [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## مطالعه و تحویل کار
+
+ترتیب پیشنهادی:
+
+1. [PROJECT_STATUS.md](PROJECT_STATUS.md) و [ROADMAP.md](ROADMAP.md)
+2. [DECISIONS.md](DECISIONS.md) و دفتر تفصیلی [تصمیم‌های DEC-001 تا DEC-026](docs/project-governance/decisions.md)
+3. [ARCHITECTURE.md](ARCHITECTURE.md)، [API.md](API.md)، [DATABASE.md](DATABASE.md)، [ENVIRONMENT.md](ENVIRONMENT.md)
+4. [IMPLEMENTATION.md](IMPLEMENTATION.md)، [TROUBLESHOOTING.md](TROUBLESHOOTING.md)، [RUNBOOK.md](RUNBOOK.md)
+5. [WINDOWS-REINSTALL.md](WINDOWS-REINSTALL.md)، [BACKUP-RESTORE.md](BACKUP-RESTORE.md)، [SECURITY-NEXT-STEPS.md](SECURITY-NEXT-STEPS.md)
+6. [راهنمای کاربری](docs/user-manual.md)، [طرح ظرفیت](docs/project-governance/capacity-lab.md)، [نقطه شروع برای عامل بعدی](START_HERE.md)
+
+`SYSTEM-RECOVERY.md` نیز یادداشت بازیابی کوتاه موجود در مخزن است؛ دستور کامل‌تر و محدودیت‌های واقعی در `WINDOWS-REINSTALL.md` مرجع نهایی‌اند.
+
+اسناد قدیمی‌تر و تخصصی در پوشه [`docs`](docs/) نگهداری می‌شوند؛ تیک تاریخی برنامه‌ها به معنای آزمون امروز نیست.
+
+## راه‌اندازی توسعه‌دهنده
+
+نیاز است: Git، Node.js/npm سازگار با lockfile، Docker Desktop یا PostgreSQL 16، و دسترسی به یک دیتابیس مجاز. ابتدا [ENVIRONMENT.md](ENVIRONMENT.md) را برای ایجاد تنظیمات محلی بخوانید؛ هیچ مقدار واقعی در این مخزن نیست.
+
+در PowerShell از پوشه پروژه:
+
+```powershell
+npm ci
 npm run build
 npm start
 ```
 
-این دستورها راهنما هستند؛ در این مأموریت اجرا نشده‌اند. نصب روی دیتابیس موجود بدون پشتیبان و بررسی migration مجاز تلقی نشود. خود شروع سرور نیز migrationهای معوق را اجرا می‌کند.
+برای توسعه از `npm run dev` استفاده کنید. راه‌اندازی backend به `DATABASE_URL` نیاز دارد و migrationهای معوق را اجرا می‌کند؛ روی دیتابیس موجود بدون پشتیبان معتبر آن را اجرا نکنید. در بررسی نهایی این بسته، npm run lint، npm test و npm run build با موفقیت اجرا شدند؛ health، migration روی دیتابیس زنده و restore کامل همچنان اجرا نشده‌اند.
 
-پورت پیش‌فرض مسیر واقعی `npm start` برابر **۵۰۰۰** است؛ آدرس محلی `http://localhost:5000` و آدرس شبکه `http://<server-address>:5000` است. مقدار PORT محیط می‌تواند آن را عوض کند. اشاره قدیمی README به ۴۱۷۳ با اسکریپت فعلی مطابقت نداشت. اجرای مستقیم توسعه پیش‌فرض دیگری دارد؛ [تفاوت مسیرها](docs/architecture-and-operations.md) را بخوانید. این توضیح به معنی روشن‌بودن فعلی پورت نیست.
+## تاریخچه و راستی‌آزمایی
 
-DATABASE_URL باید از تنظیم معتبر محیط یا فایل محلی حفاظت‌شده خوانده شود؛ مقدار آن، رمزها و کلید رمزنگاری را در Git یا گزارش وارد نکنید. تنظیمات گذرای یک ترمینال پس از restart لزوماً باقی نمی‌مانند.
+مسیر گفتگوها به شکل نقل‌قول کامل ذخیره نشده؛ دانش پایدار و لازم برای ادامه به تصمیم‌ها، اجراها، خطاها، وضعیت و کارهای بعدی تبدیل شده است. جزئیات رویدادهایی که زمان یا علت قطعی‌شان از مخزن قابل اثبات نبود، صریحاً «گزارش تاریخی/نیازمند تأیید» هستند.
 
-در نصب خالی، فرم راه‌اندازی اولیه شرکت، شعبه، مدیر و سال مالی را ایجاد می‌کند. روی نصب موجود برای حل خطا دوباره setup یا پاک‌سازی دیتابیس انجام ندهید.
+پیش از انتشار این مستندات، تاریخچه ۱۱ commit با الگوهای رایج secret جستجو شد؛ موردی مطابق الگو یافت نشد. این بررسی تضمین نبود همه انواع secret نیست. در هر صورت هیچ credential واقعی نباید commit شود؛ اگر قبلاً وارد تاریخچه شده، حذف فایل کافی نیست و باید credential را از منبع اصلی لغو/تعویض کرد.
 
-## مرز قابلیت فعلی و تصمیم آینده
-
-- UI با React/Vite و backend با Express/TypeScript و PostgreSQL کار می‌کند؛ برنامه چندکاربره است، اما ظرفیت عملی بدون آزمون بار معلوم نیست. pool بیست‌اتصالی به معنی سقف بیست کاربر نیست.
-- قاعده مصوب مالک: نخستین حساب bootstrap در برابر مدیران دیگر محافظت شود؛ تغییر رمز توسط خودش با رمز فعلی مجاز، فراموشی رمز فقط از مسیر امن محلی سرور. اجرای کامل این حفاظت **تأیید نشده** است.
-- آرشیو فشرده سال، دیتابیس سبک سال جدید، جداسازی مستقل لاگ امنیتی و مالی و جستجوی چندساله **مصوب آینده** هستند؛ وجود تغییر وضعیت سال مالی یا backup اثبات اجرای آن‌ها نیست.
-- کلید عمومی نشست‌های فعال در نوار کاربران فعلاً غیرفعال است؛ نشست‌ها را از عملیات ردیف کاربر بررسی کنید.
-
-## کنترل کیفیت
-
-دستورهای پروژه `npm run lint`، `npm test` و `npm run build` هستند. lint فعلی بررسی TypeScript است. گزارش قدیمی ۱۱۴ آزمون، نتیجه امروز نیست؛ جزئیات در [وضعیت بررسی](docs/verification-and-known-issues.md) آمده است.
+مراجع دستورها در `package.json`، migrations در `server/db/migrations`، تنظیمات نمونه در `.env.example` و کد سرور در `server/` هستند. مقدارهای `.env`، password، token، کلید backup، cookie یا recovery code را در issue، GitHub یا این مستندات ننویسید.
