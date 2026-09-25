@@ -499,6 +499,430 @@
   .trade-return-form {
     width: 100%;
   }
+
+  .purchase-filter-actions {
+    padding-top: 0;
+  }
+}
+
+.purchase-workspace :is(h1, h2, h3, p, label, th, td, dt, dd, .field > span, .field > small, .form-message) {
+  text-align: center;
+}
+
+.purchase-workspace .field :is(input, select, textarea) {
+  text-align: center !important;
+}
+
+.purchase-workspace .field select {
+  text-align-last: center;
+  padding-inline: 32px;
+}
+
+.purchase-workspace .field-control > input {
+  padding-inline: 48px;
+}
+
+.purchase-workspace :is(.purchase-form-actions, .purchase-detail-actions) {
+  justify-content: center;
+}
+
+/* The purchase draft is a working document: keep its controls dense and
+   readable instead of letting a short form occupy the whole workspace. */
+.purchase-workspace .purchase-form {
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding: 12px;
+}
+
+.purchase-workspace .purchase-form .form-card-heading {
+  margin-bottom: 18px;
+}
+
+.purchase-workspace .purchase-form .form-card-heading h2,
+.purchase-workspace .purchase-form .purchase-lines-heading h2 {
+  font-size: 1.08rem;
+  line-height: 1.5;
+}
+
+.purchase-workspace .purchase-form .form-card-heading p {
+  max-width: 680px;
+  margin: 4px auto 0;
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.purchase-workspace .purchase-header-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--background) 75%, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 13px;
+}
+
+.purchase-workspace .purchase-header-grid .field > span,
+.purchase-workspace .purchase-line-grid .field > span {
+  margin-bottom: 5px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.purchase-workspace .purchase-header-grid :is(input, select),
+.purchase-workspace .purchase-line-grid :is(input, select) {
+  min-height: 41px;
+}
+
+.purchase-workspace .purchase-header-description {
+  grid-column: 1 / -1;
+}
+
+.purchase-workspace .purchase-header-description textarea {
+  min-height: 44px;
+  height: 44px;
+  resize: vertical;
+}
+
+/* Scope the wider canvas to the purchase workspace only. */
+.main-content:has(.purchase-workspace) {
+  padding: 10px;
+}
+
+.content-page.purchase-workspace {
+  width: 100%;
+  max-width: none;
+}
+
+.purchase-workspace .purchase-form .purchase-header-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px 10px;
+  align-items: stretch;
+}
+
+.purchase-workspace .purchase-header-grid > .field {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.purchase-workspace .purchase-header-grid > .field > :first-child {
+  grid-row: 1;
+  align-self: end;
+  margin: 0;
+  font-size: .76rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.purchase-workspace .purchase-header-grid > .field > :nth-child(2) {
+  grid-row: 2;
+  align-self: stretch;
+  margin: 0;
+}
+
+.purchase-workspace .purchase-header-grid > .field > .jalali-date-hint {
+  grid-row: 3;
+  margin: 0;
+}
+
+.purchase-workspace .purchase-header-grid .field :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  font-size: .8rem;
+  text-align: center !important;
+  text-align-last: center;
+}
+
+.purchase-workspace .purchase-header-grid > .purchase-header-description {
+  grid-column: 1 / -1;
+  grid-row: span 2;
+}
+
+@media (max-width: 760px) {
+  .purchase-workspace .purchase-form .purchase-header-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .purchase-workspace .purchase-form .purchase-header-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.purchase-workspace .purchase-lines-heading {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.purchase-workspace .purchase-lines {
+  gap: 10px;
+}
+
+.purchase-workspace .purchase-line-card {
+  padding: 13px;
+  border-radius: 13px;
+  box-shadow: none;
+}
+
+.purchase-workspace .purchase-line-heading {
+  min-height: 36px;
+  margin-bottom: 10px;
+  grid-template-columns: minmax(96px, 0.7fr) minmax(160px, 1fr) minmax(110px, 0.7fr);
+}
+
+.purchase-workspace .purchase-line-heading > strong {
+  font-size: 0.88rem;
+}
+
+.purchase-workspace .purchase-line-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.purchase-workspace .purchase-product-field {
+  grid-column: span 2;
+}
+
+.purchase-workspace .purchase-description-field {
+  grid-column: span 2;
+}
+
+.purchase-workspace .purchase-form-total {
+  width: min(620px, 100%);
+  margin: 14px auto 0;
+  padding: 12px 16px;
+}
+
+.purchase-workspace .purchase-form-total strong {
+  font-size: 1rem;
+}
+
+.purchase-workspace .purchase-form-actions {
+  margin-top: 14px;
+}
+
+/* Dense invoice grid: the purchase editor behaves like a paper invoice on
+   desktop, while horizontal scroll keeps every column reachable on small screens. */
+.purchase-workspace .purchase-draft-table {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.purchase-workspace .purchase-draft-table table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.purchase-workspace .purchase-draft-table th,
+.purchase-workspace .purchase-draft-table td {
+  padding: 7px 6px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  vertical-align: middle;
+  text-align: center;
+}
+
+.purchase-workspace .purchase-draft-table th {
+  color: var(--navy-strong);
+  font-size: 0.72rem;
+  font-weight: 900;
+  background: color-mix(in srgb, var(--background) 78%, var(--card));
+  white-space: nowrap;
+}
+
+.purchase-workspace .purchase-draft-table th:nth-child(1) { width: 44px; }
+.purchase-workspace .purchase-draft-table th:nth-child(2) { width: 82px; }
+.purchase-workspace .purchase-draft-table th:nth-child(3) { width: 190px; }
+.purchase-workspace .purchase-draft-table th:nth-child(4) { width: 145px; }
+.purchase-workspace .purchase-draft-table th:nth-child(5) { width: 72px; }
+.purchase-workspace .purchase-draft-table th:nth-child(6) { width: 56px; }
+.purchase-workspace .purchase-draft-table th:nth-child(n + 7):nth-child(-n + 9) { width: 110px; }
+.purchase-workspace .purchase-draft-table th:nth-child(10) { width: 120px; }
+.purchase-workspace .purchase-draft-table th:nth-child(11) { width: 52px; }
+
+.purchase-workspace .purchase-draft-table :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 7px;
+  font-size: 0.78rem;
+  text-align: center;
+  border-width: 1px;
+  border-radius: 7px;
+}
+
+.purchase-workspace .purchase-draft-table select {
+  text-align-last: center;
+}
+
+.purchase-workspace .purchase-line-code,
+.purchase-workspace .purchase-line-unit,
+.purchase-workspace .purchase-line-total {
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.purchase-workspace .purchase-line-total { color: var(--navy-strong); }
+
+.purchase-workspace .purchase-row-remove {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  color: #9b3740;
+  background: #fff3f4;
+  border: 1px solid #e8c1c5;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.purchase-workspace .purchase-row-remove:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.purchase-workspace .purchase-row-remove svg { width: 16px; height: 16px; }
+
+.purchase-workspace :is(.purchase-line-note-row, .purchase-line-serial-row) td {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--background) 82%, var(--card));
+}
+
+.purchase-workspace :is(.purchase-line-note-row, .purchase-line-serial-row) label {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.purchase-workspace :is(.purchase-line-note-row, .purchase-line-serial-row) label > span,
+.purchase-workspace :is(.purchase-line-note-row, .purchase-line-serial-row) small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.purchase-workspace .purchase-line-note-row small,
+.purchase-workspace .purchase-line-serial-row small { display: block; margin-top: 5px; }
+
+.purchase-workspace .purchase-line-serial-row textarea {
+  min-height: 76px;
+  padding: 7px;
+  font-size: .8rem;
+  text-align: center !important;
+  border-width: 1px;
+  border-radius: 7px;
+}
+
+@media (max-width: 1050px) {
+  .purchase-workspace .purchase-header-grid,
+  .purchase-workspace .purchase-line-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .purchase-workspace .purchase-form {
+    padding: 15px;
+  }
+
+  .purchase-workspace .purchase-header-grid,
+  .purchase-workspace .purchase-line-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .purchase-workspace :is(.purchase-product-field, .purchase-description-field) {
+    grid-column: auto;
+  }
+
+  .purchase-workspace .purchase-draft-table { border-radius: 10px; }
+}
+
+/* Labels, controls and hints share actual grid rows, without pixel offsets. */
+.purchase-workspace .purchase-filter-grid {
+  grid-template-columns: minmax(0, .85fr) repeat(2, minmax(0, 1fr)) minmax(240px, auto);
+  align-items: stretch;
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+.purchase-workspace .purchase-filter-grid > .field,
+.purchase-workspace .purchase-filter-actions {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.purchase-workspace .purchase-filter-grid > .field > :first-child {
+  grid-row: 1;
+  align-self: end;
+  margin: 0;
+}
+
+.purchase-workspace .purchase-filter-grid > .field > :nth-child(2) {
+  grid-row: 2;
+  align-self: stretch;
+}
+
+.purchase-workspace .purchase-filter-grid > .field > .jalali-date-hint {
+  grid-row: 3;
+  margin: 0;
+}
+
+.purchase-workspace .purchase-filter-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 9px;
+}
+
+.purchase-workspace .purchase-filter-actions > .button {
+  grid-row: 2;
+  align-self: stretch;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.purchase-workspace .purchase-filter-grid :is(select, .field-control > input, .purchase-filter-actions > .button) {
+  box-sizing: border-box;
+  height: 46px;
+  min-height: 46px;
+  margin-block: 0;
+}
+
+@media (max-width: 1050px) {
+  .purchase-workspace .purchase-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .purchase-workspace .purchase-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .purchase-workspace .purchase-filter-actions {
+    grid-row: auto;
+    grid-template-rows: auto;
+  }
+  .purchase-workspace .purchase-filter-actions > .button {
+    grid-row: 1;
+  }
 }
 
 .trade-return-blocker {

@@ -23,7 +23,8 @@ export async function listRecoverableAdmins(): Promise<readonly RecoverableAdmin
         SELECT DISTINCT
           "user".id,
           "user".username,
-          "user".full_name
+          "user".full_name,
+          "user".created_at
         FROM users "user"
         JOIN user_roles user_role ON user_role.user_id = "user".id
         JOIN roles role ON role.id = user_role.role_id

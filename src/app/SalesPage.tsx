@@ -2,7 +2,6 @@ import {
   CirclePlus,
   Eye,
   Plus,
-  RefreshCw,
   RotateCcw,
   Save,
   Search,
@@ -575,7 +574,7 @@ export function SalesPage({amountUnit, permissions}: SalesPageProps) {
   }
 
   return (
-    <section className="content-page purchases-page sales-page">
+    <section className="content-page purchases-page sales-page business-forms">
       <header className="page-heading compact">
         <ContextHelpButton help={appHelp.sales} />
         <div>
@@ -585,17 +584,6 @@ export function SalesPage({amountUnit, permissions}: SalesPageProps) {
           <h1>{'\u0641\u0627\u06a9\u062a\u0648\u0631\u0647\u0627\u06cc \u0641\u0631\u0648\u0634'}</h1>
         </div>
         <div className="heading-actions">
-          <button
-            className="button secondary"
-            disabled={pending}
-            onClick={() => {
-              void loadOptions();
-              setReloadVersion((current) => current + 1);
-            }}
-            type="button"
-          >
-            <RefreshCw aria-hidden />{'\u0628\u0627\u0632\u062e\u0648\u0627\u0646\u06cc'}
-          </button>
           {canCreate ? (
             <button
               className="button primary"

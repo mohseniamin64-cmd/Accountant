@@ -1,8 +1,10 @@
 import {
+  BarChart3,
   Boxes,
   Building2,
   Calculator,
-  ChevronLeft,
+  ClipboardCheck,
+  ClipboardPlus,
   Factory,
   FileText,
   Home,
@@ -10,9 +12,12 @@ import {
   Menu,
   PackageCheck,
   ReceiptText,
+  Search,
   Settings,
   ShieldCheck,
   ShoppingCart,
+  User,
+  UserCog,
   Users,
   WalletCards,
   Wrench,
@@ -20,7 +25,10 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import {
-  FormEvent,
+  type CSSProperties,
+  type FormEvent,
+  type KeyboardEvent,
+  type PointerEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -32,6 +40,7 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from 'react-router-dom';
 import type {
@@ -40,9 +49,18 @@ import type {
   BootstrapResponse,
   CompanyProfile,
 } from '../../shared/contracts.js';
-import {api, errorMessage, getBootstrap, postJson} from './api.js';
+import {
+  api,
+  AUTHENTICATION_REQUIRED_EVENT,
+  errorMessage,
+  getBootstrap,
+  postJson,
+} from './api.js';
 import {AccountingPage} from './AccountingPage.js';
+import {AdminRecoveryLauncher} from './AdminRecoveryLauncher.js';
+import {BrandLogo} from './BrandLogo.js';
 import {ContextHelpButton} from './ContextHelpButton.js';
+import {CommerceDashboard} from './CommerceDashboard.js';
 import {ThemeControl} from './ThemeControl.js';
 import {readThemeMode, type ThemeMode} from './theme.js';
 import {JalaliDateField} from './JalaliDateField.js';
@@ -56,9 +74,15 @@ import {ProductionPage} from './ProductionPage.js';
 import {PurchasesPage} from './PurchasesPage.js';
 import {SalesPage} from './SalesPage.js';
 import {ServicePage} from './ServicePage.js';
+import {ServiceReceptionPage} from './ServiceReceptionPage.js';
+import {ServiceReportsPanel} from './ServiceReportsPanel.js';
 import {ServiceTrackingPage} from './ServiceTrackingPage.js';
 import {SettingsPage} from './SettingsPage.js';
 import {TreasuryPage} from './TreasuryPage.js';
+import {AuditLogPage} from './AuditLogPage.js';
+import {UserManagementPage} from './UserManagementPage.js';
+import './user-management.css';
+import './business-forms.css';
 
 interface AppSession {
   company: CompanyProfile;
@@ -77,6 +101,26 @@ interface SetupProps {
 interface ShellProps {
   session: AppSession;
   onSessionChanged: () => Promise<void>;
+}
+
+const SERVICE_SIDEBAR_MIN_WIDTH = 250;
+const SERVICE_SIDEBAR_MAX_WIDTH = 425;
+const SERVICE_SIDEBAR_WIDTH_KEY = 'diaco-service-sidebar-width';
+
+function clampServiceSidebarWidth(width: number): number {
+  return Math.min(SERVICE_SIDEBAR_MAX_WIDTH, Math.max(SERVICE_SIDEBAR_MIN_WIDTH, width));
+}
+
+function readServiceSidebarWidth(): number {
+  if (typeof window === 'undefined') return SERVICE_SIDEBAR_MIN_WIDTH;
+  try {
+    const stored = Number(window.localStorage.getItem(SERVICE_SIDEBAR_WIDTH_KEY));
+    return Number.isFinite(stored)
+      ? clampServiceSidebarWidth(stored)
+      : SERVICE_SIDEBAR_MIN_WIDTH;
+  } catch {
+    return SERVICE_SIDEBAR_MIN_WIDTH;
+  }
 }
 
 interface ListColumn {
@@ -101,12 +145,29 @@ interface NavigationItem {
   permission?: string;
 }
 
+type WorkspaceId = 'accounting' | 'service';
+
+interface WorkspaceDefinition {
+  id: WorkspaceId;
+  title: string;
+  sectionTitle: string;
+  defaultPath: string;
+  icon: LucideIcon;
+  navigationPaths: readonly string[];
+}
+
 const navigation: readonly NavigationItem[] = [
   {to: '/', title: 'خانه', icon: Home},
   {
     to: '/accounting',
-    title: 'حسابداری',
+    title: 'داشبورد بازرگانی',
     icon: Calculator,
+    permission: 'accounting.view',
+  },
+  {
+    to: '/accounting/records',
+    title: 'اسناد حسابداری',
+    icon: FileText,
     permission: 'accounting.view',
   },
   {
@@ -157,11 +218,51 @@ const navigation: readonly NavigationItem[] = [
     permission: 'production.view',
   },
   {
-    to: '/service',
-    title: 'خدمات و گارانتی',
+    to: '/service?task=tracking',
+    title: 'رهگیری مشتری',
+    icon: Search,
+    permission: 'service.view',
+  },
+  {
+    to: '/service/reception',
+    title: 'پذیرش دستگاه',
+    icon: ClipboardPlus,
+    permission: 'service.reception',
+  },
+  {
+    to: '/service?task=queue',
+    title: 'صف تعمیرات',
+    icon: ClipboardCheck,
+    permission: 'service.view',
+  },
+  {
+    to: '/service?task=technical',
+    title: 'بررسی فنی',
+    icon: Search,
+    permission: 'service.view',
+  },
+  {
+    to: '/service?task=repair',
+    title: 'در حال تعمیر',
     icon: Wrench,
     permission: 'service.view',
   },
+  {
+    to: '/service?task=delivery',
+    title: 'آماده تحویل',
+    icon: PackageCheck,
+    permission: 'service.view',
+  },
+  {
+    to: '/service/reports',
+    title: 'گزارش خدمات',
+    icon: BarChart3,
+    permission: 'service.view',
+  },
+  {to: '/service?task=waiting-customer', title: 'در انتظار تأیید مشتری', icon: ClipboardCheck, permission: 'service.view'},
+  {to: '/service?task=waiting-part', title: 'در انتظار قطعه', icon: ClipboardCheck, permission: 'service.view'},
+  {to: '/service?task=final-test', title: 'آزمون نهایی', icon: ClipboardCheck, permission: 'service.view'},
+  {to: '/service?task=archive', title: 'بایگانی پرونده‌ها', icon: ClipboardCheck, permission: 'service.view'},
   {
     to: '/reports',
     title: 'گزارش‌ها',
@@ -173,6 +274,63 @@ const navigation: readonly NavigationItem[] = [
     title: 'تنظیمات',
     icon: Settings,
     permission: 'system.settings.manage',
+  },
+  {
+    to: '/users',
+    title: 'کاربران و دسترسی‌ها',
+    icon: UserCog,
+    permission: 'system.users.manage',
+  },
+  {
+    to: '/audit',
+    title: 'گزارش سابقه عملیات',
+    icon: FileText,
+    permission: 'system.audit.view',
+  },
+];
+
+const workspaces: readonly WorkspaceDefinition[] = [
+  {
+    id: 'accounting',
+    title: 'حسابداری',
+    sectionTitle: 'واحد حسابداری و بازرگانی',
+    defaultPath: '/accounting',
+    icon: Calculator,
+    navigationPaths: [
+      '/accounting',
+      '/accounting/records',
+      '/treasury',
+      '/parties',
+      '/products',
+      '/organization',
+      '/inventory',
+      '/purchases',
+      '/sales',
+      '/production',
+      '/reports',
+      '/settings',
+      '/users',
+    ],
+  },
+  {
+    id: 'service',
+    title: 'خدمات و گارانتی',
+    sectionTitle: 'واحد خدمات پس از فروش و گارانتی',
+    defaultPath: '/service',
+    icon: Wrench,
+    navigationPaths: [
+      '/service?task=tracking',
+      '/service/reception',
+      '/service?task=queue',
+      '/service?task=technical',
+      '/service?task=repair',
+      '/service?task=delivery',
+      '/service?task=waiting-customer',
+      '/service?task=waiting-part',
+      '/service?task=final-test',
+      '/service?task=archive',
+      '/service/reports',
+    ],
   },
 ];
 
@@ -188,6 +346,7 @@ function Field({
   maxLength,
   pattern,
   title,
+  leadingIcon: LeadingIcon,
 }: {
   label: string;
   name: string;
@@ -200,13 +359,15 @@ function Field({
   maxLength?: number;
   pattern?: string;
   title?: string;
+  leadingIcon?: LucideIcon;
 }) {
   return (
-    <label className="field">
+    <label className={LeadingIcon ? 'field field--with-leading-icon' : 'field'}>
       <span>
         {label}
         {required ? <b aria-label="الزامی"> *</b> : null}
       </span>
+      {LeadingIcon ? <LeadingIcon className="field-leading-icon" aria-hidden /> : null}
       <input
         name={name}
         type={type}
@@ -250,13 +411,23 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    const form = new FormData(event.currentTarget);
+    const username = String(form.get('username') ?? '').trim();
+    const password = String(form.get('password') ?? '');
+    if (!username) {
+      setError('نام کاربری الزامی است');
+      return;
+    }
+    if (!password) {
+      setError('رمز عبور الزامی است');
+      return;
+    }
     setPending(true);
     setError(null);
-    const form = new FormData(event.currentTarget);
     try {
       await postJson('/api/auth/login', {
-        username: String(form.get('username') ?? ''),
-        password: String(form.get('password') ?? ''),
+        username,
+        password,
       });
       await onAuthenticated();
     } catch (caught) {
@@ -269,7 +440,7 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
   return (
     <main className={`auth-page ${theme === 'dark' ? 'theme-dark' : 'theme-light'}`}>
       <section className="auth-brand" aria-label="معرفی سامانه">
-        <div className="brand-mark"><Building2 aria-hidden /></div>
+        <BrandLogo variant="auth" logoUrl={company?.logoUrl} />
         <h1>{company?.nameFa ?? 'دیاکو الکترونیکس'}</h1>
         <p>سامانه یکپارچه مدیریت مالی، تولید و خدمات</p>
         <ul>
@@ -282,9 +453,9 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
         <div className="auth-theme-control">
           <ThemeControl onThemeChanged={setTheme} />
         </div>
-        <form className="auth-card" onSubmit={submit}>
+        <form className="auth-card" noValidate onSubmit={submit}>
           <div className="mobile-brand">
-            <div className="brand-mark"><Building2 aria-hidden /></div>
+            <BrandLogo variant="mobile" logoUrl={company?.logoUrl} />
             <strong>{company?.nameFa ?? 'دیاکو الکترونیکس'}</strong>
           </div>
           <header className="auth-card-heading">
@@ -294,35 +465,68 @@ function LoginPage({company, onAuthenticated}: LoginProps) {
           <Field
             label="نام کاربری"
             name="username"
-            required
-            autoComplete="username"
-          />
+          required
+          autoComplete="username"
+          leadingIcon={User}
+        />
           <PasswordField
             label="رمز عبور"
             name="password"
             required
             autoComplete="current-password"
+            showLockIcon
           />
-          <SubmitMessage error={error} />
+          <div className="auth-submit-message">
+            <SubmitMessage error={error} />
+          </div>
           <button className="button primary wide" disabled={pending} type="submit">
             {pending ? 'در حال بررسی…' : 'ورود به سامانه'}
           </button>
           <button
             className="auth-recovery-link"
             type="button"
+            aria-controls="login-recovery-guide"
             aria-expanded={showRecoveryHelp}
             onClick={() => setShowRecoveryHelp((visible) => !visible)}
           >
             نام کاربری یا رمز عبور را فراموش کرده‌اید؟
           </button>
           {showRecoveryHelp ? (
-            <div className="auth-recovery-note" role="status">
-              <strong>بازیابی فقط از روی کامپیوتر سرور</strong>
-              <p>
-                ترمینال را با دسترسی مدیر ویندوز باز کنید و دستور زیر را در
-                پوشه برنامه اجرا کنید. هیچ اطلاعات مالی یا عملیاتی حذف نمی‌شود.
-              </p>
-              <code dir="ltr">npm run recovery</code>
+            <div
+              className="auth-recovery-note"
+              id="login-recovery-guide"
+              role="region"
+              aria-label="راهنمای بازیابی اطلاعات ورود"
+            >
+              <h3>بازیابی اطلاعات ورود</h3>
+              <section className="auth-recovery-option">
+                <div className="auth-recovery-option-heading">
+                  <Users aria-hidden />
+                  <strong>کاربر عادی</strong>
+                </div>
+                <p>
+                  <b>نام کاربری:</b> فقط مدیر اصلی سامانه می‌تواند آن را از
+                  بخش مدیریت کاربران مشاهده و به شما اعلام کند.
+                </p>
+                <p>
+                  <b>رمز عبور:</b> مدیر اصلی یک رمز موقت برای شما تعیین می‌کند.
+                  پس از ورود با رمز موقت، باید رمز شخصی جدیدی انتخاب کنید.
+                </p>
+              </section>
+              <section className="auth-recovery-option admin">
+                <div className="auth-recovery-option-heading">
+                  <ShieldCheck aria-hidden />
+                  <strong>مدیر اصلی سامانه</strong>
+                </div>
+                <p>
+                  بازیابی فقط روی کامپیوتر سرور و با تأیید مدیر ویندوز انجام
+                  می‌شود. دکمه زیر مراحل را به‌صورت گرافیکی نمایش می‌دهد.
+                </p>
+                <AdminRecoveryLauncher />
+                <p className="auth-recovery-assurance">
+                  این عملیات هیچ اطلاعات مالی، انبار، تولید یا خدمات را حذف نمی‌کند.
+                </p>
+              </section>
             </div>
           ) : null}
         </form>
@@ -539,16 +743,13 @@ function ListPage({
   }, [load]);
 
   return (
-    <section className="content-page">
+    <section className={'content-page' + (endpoint.startsWith('/api/inventory/') ? ' business-forms' : '')}>
       <header className="page-heading compact">
         <ContextHelpButton help={help} />
         <div>
           <p>{description}</p>
           <h1>{title}</h1>
         </div>
-        <button className="button secondary" type="button" onClick={() => void load()}>
-          بازخوانی
-        </button>
       </header>
       <SubmitMessage error={error} />
       <div className="table-card">
@@ -589,61 +790,85 @@ function ListPage({
 }
 
 function HomePage({session}: {session: AppSession}) {
-  const visibleModules = navigation.filter(
-    (item) =>
-      item.to !== '/' &&
-      (!item.permission || session.user.permissions.includes(item.permission)),
-  );
+  const hasAnyPermission = (permissions: readonly string[]) =>
+    permissions.some((permission) => session.user.permissions.includes(permission));
+  const canUseCommerce = hasAnyPermission([
+    'accounting.view',
+    'treasury.view',
+    'purchase.view',
+    'sales.view',
+    'inventory.view',
+    'reports.view',
+  ]);
+  const canUseService = hasAnyPermission(['service.view']);
+
   return (
-    <section className="content-page">
-      <header className="welcome-card">
-        <ContextHelpButton help={appHelp.dashboard} />
-        <div>
-          <p>امروز به کدام بخش نیاز دارید؟</p>
-          <h1>{session.user.fullName}، خوش آمدید</h1>
-          <span>
-            اطلاعات این صفحه از مجوزهای حساب شما خوانده شده است.
-          </span>
-        </div>
-        <div className="welcome-mark"><Building2 aria-hidden /></div>
-      </header>
-      <div className="section-heading">
+    <section className="content-page system-hub-page">
+      <div className="section-heading system-hub-heading">
         <ContextHelpButton help={appHelp.dashboardModules} />
         <div>
-          <p>دسترسی‌های فعال</p>
-          <h2>فضاهای کاری شما</h2>
+          <h2>انتخاب سامانه کاری</h2>
+          <p>دو فضای مستقل با اطلاعات مشترک کالا، مشتری، فروش و گارانتی</p>
         </div>
       </div>
-      <div className="module-grid">
-        {visibleModules.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink className="module-card" to={item.to} key={item.to}>
-              <span className="module-icon"><Icon aria-hidden /></span>
-              <span>
-                <strong>{item.title}</strong>
-                <small>ورود به بخش</small>
-              </span>
-              <ChevronLeft aria-hidden />
-            </NavLink>
-          );
-        })}
+      <div className="system-hub-grid">
+        {canUseCommerce && (
+          <NavLink
+            className="system-hub-card system-hub-card--commerce"
+            to="/accounting"
+            aria-label="ورود به حسابداری و بازرگانی"
+          >
+            <span className="system-hub-card-accent" aria-hidden />
+            <span className="system-hub-card-heading">
+              <span className="system-hub-icon"><Calculator aria-hidden /></span>
+              <strong>حسابداری و بازرگانی</strong>
+              <small>مدیریت گردش مالی و عملیات تجاری</small>
+            </span>
+            <span className="system-hub-features">
+              <span><ReceiptText aria-hidden /> خرید، فروش و فاکتورهای تجاری</span>
+              <span><Boxes aria-hidden /> انبار، کالا و موجودی</span>
+              <span><WalletCards aria-hidden /> خزانه، اسناد و گزارش‌های مالی</span>
+            </span>
+            <span className="system-hub-action">ورود به حسابداری و بازرگانی</span>
+          </NavLink>
+        )}
+        {canUseService && (
+          <NavLink
+            className="system-hub-card system-hub-card--service"
+            to="/service"
+            aria-label="ورود به خدمات پس از فروش و گارانتی"
+          >
+            <span className="system-hub-card-accent" aria-hidden />
+            <span className="system-hub-card-heading">
+              <span className="system-hub-icon"><Wrench aria-hidden /></span>
+              <strong>خدمات پس از فروش و گارانتی</strong>
+              <small>پیگیری دستگاه، تعمیر و تعهدات گارانتی</small>
+            </span>
+            <span className="system-hub-features">
+              <span><PackageCheck aria-hidden /> استعلام سریال و وضعیت گارانتی</span>
+              <span><Wrench aria-hidden /> پذیرش، تعمیر و قطعات مصرفی</span>
+              <span><ShieldCheck aria-hidden /> تحویل، سوابق خدمات و رهگیری</span>
+            </span>
+            <span className="system-hub-action">ورود به خدمات و گارانتی</span>
+          </NavLink>
+        )}
       </div>
-      <div className="info-card">
-        <ShieldCheck aria-hidden />
-        <div>
-          <strong>نقش‌های فعال</strong>
-          <p>{session.user.roles.map((role) => role.name).join('، ') || 'بدون نقش'}</p>
+      {!canUseCommerce && !canUseService && (
+        <div className="system-hub-empty">
+          برای نقش فعلی شما دسترسی به هیچ‌یک از سامانه‌ها تعریف نشده است.
         </div>
-      </div>
+      )}
     </section>
   );
 }
 
 function AppShell({session, onSessionChanged}: ShellProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [updatingUnit, setUpdatingUnit] = useState(false);
+  const [serviceSidebarWidth, setServiceSidebarWidth] = useState(readServiceSidebarWidth);
+  const isSystemSelection = location.pathname === '/';
   const visibleNavigation = useMemo(
     () =>
       navigation.filter(
@@ -653,6 +878,112 @@ function AppShell({session, onSessionChanged}: ShellProps) {
       ),
     [session.user.permissions],
   );
+  const activeWorkspace: WorkspaceId =
+    location.pathname.startsWith('/service') ||
+    new URLSearchParams(location.search).get('workspace') === 'service'
+      ? 'service'
+      : 'accounting';
+  const availableWorkspaces = useMemo(
+    () =>
+      workspaces.filter((workspace) =>
+        visibleNavigation.some((item) =>
+          workspace.navigationPaths.includes(item.to),
+        ),
+      ),
+    [visibleNavigation],
+  );
+  const workspace = workspaces.find((item) => item.id === activeWorkspace) ?? workspaces[0]!;
+  const workspaceNavigation = useMemo(
+    () =>
+      visibleNavigation.filter((item) =>
+        workspace.navigationPaths.includes(item.to),
+      ),
+    [visibleNavigation, workspace],
+  );
+
+  function openWorkspace(nextWorkspace: WorkspaceDefinition) {
+    setMenuOpen(false);
+    navigate(nextWorkspace.defaultPath);
+  }
+
+  function workspaceDestination(item: NavigationItem): string {
+    if (activeWorkspace === 'service' && !item.to.startsWith('/service')) {
+      return item.to + '?workspace=service';
+    }
+    return item.to;
+  }
+
+  function sidebarItemClass(item: NavigationItem, isRouteActive: boolean): string {
+    if (!item.to.startsWith('/service?task=')) return isRouteActive ? 'active' : '';
+    const itemTask = new URL(item.to, window.location.origin).searchParams.get('task');
+    const activeTask = new URLSearchParams(location.search).get('task');
+    return itemTask === activeTask ? 'active' : '';
+  }
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SERVICE_SIDEBAR_WIDTH_KEY, String(serviceSidebarWidth));
+    } catch {
+      // The current layout remains usable if browser storage is unavailable.
+    }
+  }, [serviceSidebarWidth]);
+
+  useEffect(() => {
+    let disposed = false;
+    const sendHeartbeat = () => {
+      if (disposed || document.visibilityState === 'hidden') return;
+      void postJson('/api/auth/heartbeat', {}).catch(() => {
+        // The normal authentication-required event handles an expired session.
+      });
+    };
+    sendHeartbeat();
+    const interval = window.setInterval(sendHeartbeat, 60_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') sendHeartbeat();
+    };
+    const onFocus = () => sendHeartbeat();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      disposed = true;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [session.user.id]);
+
+  function updateServiceSidebarWidth(width: number): void {
+    setServiceSidebarWidth(clampServiceSidebarWidth(width));
+  }
+
+  function beginServiceSidebarResize(event: PointerEvent<HTMLDivElement>): void {
+    if (activeWorkspace !== 'service') return;
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = serviceSidebarWidth;
+    const onMove = (moveEvent: globalThis.PointerEvent) => {
+      updateServiceSidebarWidth(startWidth + startX - moveEvent.clientX);
+    };
+    const onEnd = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onEnd);
+      window.removeEventListener('pointercancel', onEnd);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onEnd);
+    window.addEventListener('pointercancel', onEnd);
+  }
+
+  function handleServiceSidebarResizeKey(event: KeyboardEvent<HTMLDivElement>): void {
+    let nextWidth: number | null = null;
+    if (event.key === 'ArrowLeft') nextWidth = serviceSidebarWidth + 15;
+    if (event.key === 'ArrowRight') nextWidth = serviceSidebarWidth - 15;
+    if (event.key === 'Home') nextWidth = SERVICE_SIDEBAR_MIN_WIDTH;
+    if (event.key === 'End') nextWidth = SERVICE_SIDEBAR_MAX_WIDTH;
+    if (nextWidth === null) return;
+    event.preventDefault();
+    updateServiceSidebarWidth(nextWidth);
+  }
 
   async function logout() {
     await api('/api/auth/logout', {method: 'POST'});
@@ -679,21 +1010,35 @@ function AppShell({session, onSessionChanged}: ShellProps) {
   }
 
   return (
-    <div className="app-shell">
+    <div
+      style={
+        activeWorkspace === 'service'
+          ? ({'--service-sidebar-width': `${serviceSidebarWidth}px`} as CSSProperties)
+          : undefined
+      }
+      className={
+        isSystemSelection
+          ? 'app-shell app-shell--system-selection'
+          : activeWorkspace === 'service'
+            ? 'app-shell app-shell--workspace-service'
+            : 'app-shell'
+      }
+    >
       <header className="topbar">
-        <button
-          className="icon-button mobile-only"
-          type="button"
-          aria-label="بازکردن منو"
-          onClick={() => setMenuOpen(true)}
-        >
-          <Menu aria-hidden />
-        </button>
-        <div className="topbar-brand">
-          <div className="brand-mark small"><Building2 aria-hidden /></div>
+        {!isSystemSelection && (
+          <button
+            className="icon-button mobile-only"
+            type="button"
+            aria-label="بازکردن منو"
+            onClick={() => setMenuOpen(true)}
+          >
+            <Menu aria-hidden />
+          </button>
+        )}
+        <BrandLogo variant="topbar" logoUrl={session.company.logoUrl} />
+        <div className="topbar-title">
           <div>
             <strong>{session.company.nameFa}</strong>
-            <span>سامانه مدیریت یکپارچه</span>
           </div>
         </div>
         <div className="topbar-tools">
@@ -716,16 +1061,9 @@ function AppShell({session, onSessionChanged}: ShellProps) {
               تومان
             </button>
           </div>
-          <div className="user-chip">
-            <span>{session.user.fullName.slice(0, 1)}</span>
-            <div>
-              <strong>{session.user.fullName}</strong>
-              <small>{session.user.roles[0]?.name ?? 'کاربر'}</small>
-            </div>
-          </div>
         </div>
       </header>
-      {menuOpen ? (
+      {!isSystemSelection && menuOpen ? (
         <button
           className="sidebar-backdrop"
           type="button"
@@ -733,9 +1071,25 @@ function AppShell({session, onSessionChanged}: ShellProps) {
           onClick={() => setMenuOpen(false)}
         />
       ) : null}
-      <aside className={menuOpen ? 'sidebar open' : 'sidebar'}>
+      {!isSystemSelection && (
+        <aside className={menuOpen ? 'sidebar open' : 'sidebar'}>
+        {activeWorkspace === 'service' ? (
+          <div
+            aria-label="تغییر عرض منوی خدمات"
+            aria-orientation="vertical"
+            aria-valuemax={SERVICE_SIDEBAR_MAX_WIDTH}
+            aria-valuemin={SERVICE_SIDEBAR_MIN_WIDTH}
+            aria-valuenow={serviceSidebarWidth}
+            className="service-sidebar-resize-handle"
+            onKeyDown={handleServiceSidebarResizeKey}
+            onPointerDown={beginServiceSidebarResize}
+            role="slider"
+            tabIndex={0}
+            title="برای تغییر عرض منو بکشید"
+          />
+        ) : null}
         <div className="sidebar-mobile-heading">
-          <strong>منوی سامانه</strong>
+          <strong>{workspace.title}</strong>
           <button
             className="icon-button"
             type="button"
@@ -746,14 +1100,54 @@ function AppShell({session, onSessionChanged}: ShellProps) {
           </button>
         </div>
 
-        <nav>
-          {visibleNavigation.map((item) => {
+        <button
+          className="workspace-hub-link"
+          type="button"
+          onClick={() => {
+            setMenuOpen(false);
+            navigate('/');
+          }}
+        >
+          <Home aria-hidden />
+          انتخاب سامانه
+        </button>
+        <div
+          className={
+            availableWorkspaces.length === 1
+              ? 'workspace-switch workspace-switch--single'
+              : 'workspace-switch'
+          }
+          aria-label="جابجایی سامانه"
+        >
+          {availableWorkspaces.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                aria-pressed={activeWorkspace === item.id}
+                className={activeWorkspace === item.id ? 'active' : ''}
+                key={item.id}
+                onClick={() => openWorkspace(item)}
+                type="button"
+              >
+                <Icon aria-hidden />
+                <span>{item.title}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className={'workspace-section-heading workspace-section-heading--' + workspace.id}>
+          <span>{workspace.sectionTitle}</span>
+          <workspace.icon aria-hidden />
+        </div>
+        <nav className={'workspace-navigation workspace-navigation--' + workspace.id}>
+          {workspaceNavigation.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
+                className={({isActive}) => sidebarItemClass(item, isActive)}
                 key={item.to}
-                to={item.to}
-                end={item.to === '/'}
+                to={workspaceDestination(item)}
+                end={item.to.startsWith('/service')}
                 onClick={() => setMenuOpen(false)}
               >
                 <Icon aria-hidden />
@@ -766,12 +1160,19 @@ function AppShell({session, onSessionChanged}: ShellProps) {
           <LogOut aria-hidden />
           خروج از سامانه
         </button>
-      </aside>
+        </aside>
+      )}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<HomePage session={session} />} />
           <Route
             path="/accounting"
+            element={
+              <CommerceDashboard permissions={session.user.permissions} />
+            }
+          />
+          <Route
+            path="/accounting/records"
             element={
               <AccountingPage
                 amountUnit={session.user.preferredAmountUnit}
@@ -784,6 +1185,7 @@ function AppShell({session, onSessionChanged}: ShellProps) {
             element={
               <PartiesPage
                 amountUnit={session.user.preferredAmountUnit}
+                isMainAdmin={session.user.roles.some((role) => role.code === 'administrator')}
                 permissions={session.user.permissions}
               />
             }
@@ -847,7 +1249,9 @@ function AppShell({session, onSessionChanged}: ShellProps) {
               />
             }
           />
-          <Route path="/service" element={<ServicePage amountUnit={session.user.preferredAmountUnit} permissions={session.user.permissions} />} />
+          <Route path="/service" element={<ServicePage amountUnit={session.user.preferredAmountUnit} companyName={session.company.nameFa} permissions={session.user.permissions} />} />
+          <Route path="/service/reception" element={<ServiceReceptionPage companyName={session.company.nameFa} permissions={session.user.permissions} />} />
+          <Route path="/service/reports" element={<ServiceReportsPanel amountUnit={session.user.preferredAmountUnit} />} />
           <Route
             path="/treasury"
             element={
@@ -872,10 +1276,14 @@ function AppShell({session, onSessionChanged}: ShellProps) {
             element={
               <SettingsPage
                 companyName={session.company.nameFa}
+                companyLogoUrl={session.company.logoUrl}
                 permissions={session.user.permissions}
+                onCompanyChanged={onSessionChanged}
               />
             }
           />
+          <Route path="/users" element={<UserManagementPage permissions={session.user.permissions} />} />
+          <Route path="/audit" element={<AuditLogPage permissions={session.user.permissions} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -886,6 +1294,7 @@ function AppShell({session, onSessionChanged}: ShellProps) {
 function Application() {
   const [bootstrap, setBootstrap] = useState<BootstrapResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const refresh = useCallback(async () => {
     setLoadError(null);
@@ -899,6 +1308,14 @@ function Application() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const handleAuthenticationRequired = () => {
+      void refresh().finally(() => navigate('/', {replace: true}));
+    };
+    window.addEventListener(AUTHENTICATION_REQUIRED_EVENT, handleAuthenticationRequired);
+    return () => window.removeEventListener(AUTHENTICATION_REQUIRED_EVENT, handleAuthenticationRequired);
+  }, [navigate, refresh]);
 
   if (loadError) {
     return (

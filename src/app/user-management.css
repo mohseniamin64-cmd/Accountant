@@ -1,0 +1,426 @@
+.user-management-page{width:100%;max-width:none}
+.user-management-tabs,.user-filter-card{display:grid;gap:10px;padding:10px;background:#dfe9f1;border:3px solid #b9cad8;border-radius:16px}
+.user-management-tabs{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:14px}
+.user-management-tabs button{min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;color:#27445f;background:#f7fafc;border:2px solid #b9cad8;border-radius:10px;cursor:pointer;font:inherit;font-weight:800}
+.user-management-tabs button.active{color:#fff;background:#17304d;border-color:#17304d}
+.user-page-actions{display:flex;justify-content:center;margin:0 0 14px}
+.user-editor,.role-editor,.reset-password-card{margin-bottom:16px}
+.user-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.user-form-grid .field{margin:0;text-align:center}
+.user-form-grid .field :is(input,select){text-align:center;text-align-last:center}
+.role-choice,.permission-groups fieldset{margin:16px 0 0;padding:12px;border:2px solid #b9cad8;border-radius:12px;background:#f7fafc}
+.role-choice legend,.permission-groups legend{padding-inline:8px;color:#17304d;font-weight:900}
+.role-choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.role-choice label{min-width:0;padding:10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;align-items:center;background:#fff;border:2px solid #d6e1ea;border-radius:9px;cursor:pointer}
+.role-choice small{grid-column:2;color:#63788c;font-size:.72rem}
+.user-filter-card{grid-template-columns:2fr repeat(3,minmax(150px,1fr));margin-bottom:14px}
+.user-filter-card .field{margin:0;text-align:center}
+.user-filter-card .field :is(input,select){text-align:center;text-align-last:center;background:#fff;border:2px solid #b9cad8}
+.user-table{border:3px solid #b9cad8}
+.user-table td,.user-table th{text-align:center;vertical-align:middle}
+.user-table th{background:#17304d;color:#f8fbff}
+.user-table .button{min-height:34px;padding:5px 9px}
+.role-badges{display:flex;justify-content:center;flex-wrap:wrap;gap:5px}
+.role-badges span{padding:4px 8px;color:#174d78;background:#e8f2fa;border:1px solid #b6cedf;border-radius:999px;font-size:.75rem;font-weight:800}
+.account-status,.online-state{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:72px;padding:5px 8px;border-radius:999px;font-size:.75rem;font-weight:800}
+.account-status-active{color:#17623e;background:#e8f7ef;border:1px solid #9bd4b3}
+.account-status-inactive{color:#825313;background:#fff6df;border:1px solid #e8c77d}
+.account-status-archived{color:#5e547b;background:#f0edfa;border:1px solid #c9c0e5}
+.online-state.online{color:#17623e;background:#e8f7ef}.online-state.offline{color:#6d7780;background:#eef2f4}
+.online-state i{width:7px;height:7px;background:currentColor;border-radius:50%}
+.device-cell{display:grid;gap:3px;justify-items:center;direction:ltr}.device-cell small{direction:rtl;color:#63788c;font-size:.7rem}
+.row-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:5px}
+.role-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:16px}
+.role-list button{min-width:0;padding:13px;display:grid;gap:5px;text-align:center;color:#17304d;background:#fff;border:2px solid #b9cad8;border-radius:12px;cursor:pointer}
+.role-list button.selected{border-color:#2d72ad;box-shadow:0 0 0 3px rgb(45 114 173 / 15%)}.role-list small{color:#63788c}.role-list span{color:#236eaa;font-size:.75rem;font-weight:800}
+.check-field{min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;background:#f7fafc;border:2px solid #b9cad8;border-radius:10px}
+.permission-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.permission-groups fieldset{margin:0;display:grid;gap:7px}.permission-groups label{display:flex;align-items:center;gap:7px;padding:7px;border-radius:7px;cursor:pointer}.permission-groups label:hover{background:#eef5fb}.permission-groups input{width:17px;height:17px;accent-color:#236eaa}
+.security-modal-backdrop{position:fixed;inset:0;z-index:2800;display:grid;place-items:center;padding:clamp(16px,3vw,38px);direction:rtl;background:rgb(12 29 48 / 58%);backdrop-filter:blur(3px)}
+.security-modal{width:min(590px,100%);max-height:min(820px,calc(100dvh - 32px));display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;background:#fff;border:3px solid #b9cad8;border-radius:18px;box-shadow:0 24px 70px rgb(10 29 48 / 32%);text-align:center}
+.security-modal header{min-height:78px;padding:14px 18px;display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;background:#17304d;color:#f8fbff;border-bottom:2px solid #2f628d}
+.security-modal header>div{grid-column:1/-1}.security-modal header span{display:block;color:#d4e2ee;font-size:.78rem}.security-modal header h2{margin:5px 0 0;color:#fff;font-size:1.05rem}
+.security-modal header button{grid-column:3;grid-row:1;z-index:1;width:40px;height:40px;display:grid;place-items:center;color:#fff;background:transparent;border:2px solid #7e9ab2;border-radius:10px;cursor:pointer}
+.security-modal-body{min-height:0;padding:20px 22px;background:#dfe9f1;overflow:auto}.security-modal-body .form-message{margin-bottom:14px}
+.security-modal-body .field{display:grid;gap:7px;justify-items:center}.security-modal-body .field>span{font-weight:800}.security-modal-body :is(input,textarea){width:100%;text-align:center;background:#fff;border:2px solid #b9cad8}
+.modal-question{margin:8px 0 16px;color:#17304d;font-weight:900;line-height:1.9}
+.security-modal footer{display:flex;justify-content:center;gap:10px;padding:14px 22px;background:#f4f8fb;border-top:1px solid #b9cad8}.security-modal footer .button{min-width:145px;border-width:2px}
+.security-modal .button.danger{color:#fff;background:#a83d4b;border-color:#8f2e3c}.security-modal .button.danger:hover:not(:disabled){background:#91313e}
+.sessions-modal{width:min(760px,100%)}.sessions-list{display:grid;gap:10px}.session-item{display:grid;grid-template-columns:1.3fr 1fr auto;gap:10px;align-items:center;padding:12px;background:#fff;border:2px solid #b9cad8;border-radius:12px;text-align:center}.session-item.active{border-color:#74b78e}.session-item>div{display:grid;gap:4px}.session-item>div span{color:#63788c;font-size:.78rem;direction:ltr}.session-item dl{display:grid;grid-template-columns:auto auto;gap:3px 9px;margin:0;font-size:.75rem}.session-item dt{color:#63788c}.session-item dd{margin:0;font-weight:800}.session-item .button{border-width:2px}
+@media(max-width:1050px){.user-form-grid,.permission-groups{grid-template-columns:repeat(2,minmax(0,1fr))}.user-filter-card{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.user-management-tabs,.user-form-grid,.permission-groups,.user-filter-card{grid-template-columns:1fr}.user-table .table-scroll{overflow-x:auto}.security-modal-backdrop{padding:0;place-items:stretch}.security-modal{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.security-modal-body{padding:16px 14px}.security-modal footer{display:grid;grid-template-columns:1fr 1fr;padding:12px 14px max(12px,env(safe-area-inset-bottom))}.security-modal footer .button{min-width:0;width:100%}.session-item{grid-template-columns:1fr}.session-item dl{justify-content:center}}
+@media(prefers-reduced-motion:reduce){.security-modal-backdrop{animation:none}}
+
+/* Centered filter labels and native select menus on the users page. */
+.user-management-page .user-filter-card .field { text-align: center; justify-items: center; }
+.user-management-page .user-filter-card .field > span { width: 100%; text-align: center; }
+.user-management-page .user-filter-card select,
+.user-management-page .user-filter-card select option,
+.user-management-page select { text-align: center; text-align-last: center; }
+
+
+/* Central user form modal follows the parties modal visual language. */
+.user-form-modal{width:min(820px,100%)}
+.user-form-modal .security-modal-body{padding:22px;background:#dfe9f1}
+.user-form-modal .user-modal-intro{margin:0 0 16px;color:#63788c;line-height:1.8;text-align:center}
+.user-form-modal .user-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.user-form-modal .field{margin:0;text-align:center}
+.user-form-modal .field>span{display:block;margin-bottom:7px;color:#17304d;font-weight:900}
+.user-form-modal .field :is(input,select){min-height:46px;width:100%;text-align:center;text-align-last:center;background:#fff;border:2px solid #b9cad8;border-radius:10px}
+.user-form-modal .field input:focus,.user-form-modal .field select:focus{border-color:#2d72ad;outline:3px solid rgb(45 114 173 / 16%)}
+.user-form-modal .role-choice{margin-top:18px;background:#f7fafc}
+.user-form-modal footer{padding:14px 22px}
+.user-discard-modal{width:min(540px,100%)}
+.user-discard-modal .security-modal-body{display:grid;place-items:center;min-height:150px}
+.user-discard-modal .modal-question{margin:0;max-width:420px}
+.user-discard-backdrop{z-index:2900}
+@media(max-width:700px){.user-form-modal .security-modal-body{padding:16px 14px}.user-form-modal .user-form-grid{grid-template-columns:1fr}.user-form-modal .role-choice{grid-template-columns:1fr}}
+.user-page-actions {
+  width: 100%;
+  margin: 0 0 14px;
+  justify-content: stretch;
+}
+
+.user-management-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.management-action {
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-width: 2px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.management-action svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.management-action small {
+  color: currentColor;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.management-action--disabled {
+  color: #697b8a;
+  background: #eef2f5;
+  border-color: #cbd7e0;
+  cursor: not-allowed;
+  opacity: 0.82;
+}
+
+.management-action--disabled small {
+  display: inline;
+}
+
+@media (max-width: 1050px) {
+  .user-management-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .user-management-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .management-action {
+    width: 100%;
+  }
+}
+/* Semantic action palette: status remains green/amber, actions use clear intent. */
+.user-action {
+  min-height: 36px;
+  min-width: 112px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-width: 2px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.user-action svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.user-action--deactivate {
+  color: #8a3440;
+  background: #fff4f4;
+  border-color: #e5b7bd;
+}
+
+.user-action--deactivate:hover:not(:disabled),
+.user-action--deactivate:focus-visible {
+  color: #fff;
+  background: #a83d4b;
+  border-color: #8f2e3c;
+}
+
+.user-action--activate {
+  color: #79570e;
+  background: #fff7df;
+  border-color: #e7c875;
+}
+
+.user-action--activate:hover:not(:disabled),
+.user-action--activate:focus-visible {
+  color: #5e4307;
+  background: #ffedb8;
+  border-color: #c99b2e;
+}
+
+.user-action--revoke {
+  color: #8a2f3e;
+  background: #fff0f1;
+  border-color: #e2b0b8;
+}
+
+.user-action--revoke:hover:not(:disabled),
+.user-action--revoke:focus-visible {
+  color: #fff;
+  background: #a83d4b;
+  border-color: #8f2e3c;
+}
+
+.user-action--sessions {
+  color: #1d5e91;
+  background: #edf6fd;
+  border-color: #a9cce7;
+}
+
+.user-action--sessions:hover:not(:disabled),
+.user-action--sessions:focus-visible {
+  color: #fff;
+  background: #286fa7;
+  border-color: #1e5c8e;
+}
+
+.user-action--password {
+  color: #68508f;
+  background: #f5f0fc;
+  border-color: #cfc0e7;
+}
+
+.user-action--password:hover:not(:disabled),
+.user-action--password:focus-visible {
+  color: #fff;
+  background: #765ca0;
+  border-color: #634889;
+}
+
+.user-action:focus-visible,
+.management-action:focus-visible {
+  outline: 3px solid rgb(45 114 173 / 30%);
+  outline-offset: 2px;
+}
+
+.management-action--audit {
+  color: #1d5e91;
+  background: #edf6fd;
+  border-color: #a9cce7;
+}
+
+.management-action--audit:hover:not(:disabled) {
+  color: #fff;
+  background: #286fa7;
+  border-color: #1e5c8e;
+}
+
+.management-action--security {
+  color: #68508f;
+  background: #f5f0fc;
+  border-color: #cfc0e7;
+}
+
+.management-action--security:hover:not(:disabled) {
+  color: #fff;
+  background: #765ca0;
+  border-color: #634889;
+}
+
+.management-action--sessions {
+  color: #476d89;
+  background: #eef5fa;
+  border-color: #bdd2e1;
+}
+
+.management-action--disabled {
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .user-action {
+    min-width: 0;
+    flex: 1 1 145px;
+    white-space: normal;
+    line-height: 1.5;
+  }
+}
+/* Keep semantic color on button surfaces; text returns to the shared readable palette. */
+.user-action--deactivate,
+.user-action--revoke {
+  color: #fff;
+  background: #a83d4b;
+  border-color: #8f2e3c;
+}
+
+.user-action--deactivate:hover:not(:disabled),
+.user-action--deactivate:focus-visible,
+.user-action--revoke:hover:not(:disabled),
+.user-action--revoke:focus-visible {
+  color: #fff;
+  background: #8f2e3c;
+  border-color: #762530;
+}
+
+.user-action--activate {
+  color: #17304d;
+  background: #f4d477;
+  border-color: #c99b2e;
+}
+
+.user-action--activate:hover:not(:disabled),
+.user-action--activate:focus-visible {
+  color: #17304d;
+  background: #eac45b;
+  border-color: #a77c16;
+}
+
+.user-action--sessions,
+.management-action--audit {
+  color: #fff;
+  background: #286fa7;
+  border-color: #1e5c8e;
+}
+
+.user-action--sessions:hover:not(:disabled),
+.user-action--sessions:focus-visible,
+.management-action--audit:hover:not(:disabled),
+.management-action--audit:focus-visible {
+  color: #fff;
+  background: #1e5c8e;
+  border-color: #16466d;
+}
+
+.user-action--password,
+.management-action--security {
+  color: #fff;
+  background: #765ca0;
+  border-color: #634889;
+}
+
+.user-action--password:hover:not(:disabled),
+.user-action--password:focus-visible,
+.management-action--security:hover:not(:disabled),
+.management-action--security:focus-visible {
+  color: #fff;
+  background: #634889;
+  border-color: #50376f;
+}
+
+.management-action--sessions {
+  color: #17304d;
+  background: #e8f0f6;
+  border-color: #b9cad8;
+}
+
+.management-action--sessions.management-action--disabled {
+  color: #51687a;
+  background: #e8f0f6;
+  border-color: #b9cad8;
+}
+/* Final status palette: only closing all sessions uses red. */
+.user-action--activate {
+  color: #fff;
+  background: #3d8d67;
+  border-color: #2f7454;
+}
+
+.user-action--activate:hover:not(:disabled),
+.user-action--activate:focus-visible {
+  color: #fff;
+  background: #2f7454;
+  border-color: #255d43;
+}
+
+.user-action--deactivate {
+  color: #17304d;
+  background: #f4d477;
+  border-color: #c99b2e;
+}
+
+.user-action--deactivate:hover:not(:disabled),
+.user-action--deactivate:focus-visible {
+  color: #17304d;
+  background: #eac45b;
+  border-color: #a77c16;
+}
+
+.user-action--revoke {
+  color: #fff;
+  background: #a83d4b;
+  border-color: #8f2e3c;
+}
+
+.user-action--revoke:hover:not(:disabled),
+.user-action--revoke:focus-visible {
+  color: #fff;
+  background: #8f2e3c;
+  border-color: #762530;
+}
+
+/* The deactivation confirmation is the same amber action, not a red action. */
+.security-action-modal .button.danger {
+  color: #17304d;
+  background: #f4d477;
+  border-color: #c99b2e;
+}
+
+.security-action-modal .button.danger:hover:not(:disabled),
+.security-action-modal .button.danger:focus-visible {
+  color: #17304d;
+  background: #eac45b;
+  border-color: #a77c16;
+}
+/* Border hierarchy for the users page. */
+.user-management-tabs,
+.user-table {
+  border-width: 3px;
+}
+
+.user-management-actions {
+  padding: 8px;
+  background: #dfe9f1;
+  border: 2px solid #b9cad8;
+  border-radius: 12px;
+}
+
+.user-filter-card,
+.user-filter-card .field :is(input, select),
+.user-management-page .user-filter-card select {
+  border-width: 2px;
+  border-radius: 10px;
+}
+
+.user-management-actions .management-action {
+  border-width: 2px;
+  border-radius: 10px;
+}

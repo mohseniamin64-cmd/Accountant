@@ -21,6 +21,8 @@ const schema = z.object({
   UPLOADS_DIR: z.string().default('data/uploads'),
   BACKUPS_DIR: z.string().default('data/backups'),
   BACKUP_ENCRYPTION_KEY: z.string().optional(),
+  BACKUP_DOCKER_CONTAINER: z.string().trim().min(1).optional(),
+  APP_VERSION: z.string().trim().min(1).max(40).default('3.0.0'),
   PG_DUMP_PATH: z.string().default('pg_dump'),
   PG_RESTORE_PATH: z.string().default('pg_restore'),
 });
@@ -40,6 +42,8 @@ export const config = {
   uploadsDir: path.resolve(process.cwd(), parsed.UPLOADS_DIR),
   backupsDir: path.resolve(process.cwd(), parsed.BACKUPS_DIR),
   backupEncryptionKey: parsed.BACKUP_ENCRYPTION_KEY,
+  backupDockerContainer: parsed.BACKUP_DOCKER_CONTAINER,
+  appVersion: parsed.APP_VERSION,
   pgDumpPath: parsed.PG_DUMP_PATH,
   pgRestorePath: parsed.PG_RESTORE_PATH,
 } as const;

@@ -150,7 +150,7 @@ export function AccountingReportsPanel({amountUnit, options}: Props) {
     balanceSheet === null;
 
   return (
-    <section className="accounting-section">
+    <section className="accounting-section business-forms">
       <header className="section-heading accounting-section-heading">
         <ContextHelpButton help={appHelp.accountingReports} />
         <div>

@@ -1,4 +1,4 @@
-import {Factory, GitBranch, RefreshCw} from 'lucide-react';
+import {Factory, GitBranch} from 'lucide-react';
 import {useCallback, useEffect, useState} from 'react';
 import type {AmountUnit} from '../../shared/contracts.js';
 import {api, errorMessage} from './api.js';
@@ -49,21 +49,13 @@ export function ProductionPage({
   }, [loadOptions]);
 
   return (
-    <section className="content-page production-page">
+    <section className="content-page production-page business-forms">
       <header className="page-heading compact">
         <ContextHelpButton help={appHelp.production} />
         <div>
           <p>فرمول ساخت، برنامه، مراحل، موجودی و بهای تمام‌شده واقعی</p>
           <h1>واحد تولید</h1>
         </div>
-        <button
-          className="button secondary"
-          disabled={pending}
-          onClick={() => void loadOptions()}
-          type="button"
-        >
-          <RefreshCw aria-hidden /> بازخوانی
-        </button>
       </header>
       {error ? <div className="form-message error" role="alert">{error}</div> : null}
       <nav className="production-tabs" aria-label="بخش‌های واحد تولید">

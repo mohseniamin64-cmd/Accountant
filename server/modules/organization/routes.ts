@@ -11,24 +11,22 @@ import {
   requirePermissions,
 } from '../auth/middleware.js';
 
-const branchSchema = z.object({
-  code: z.string().trim().min(1).max(40),
+const branchCreateSchema = z.object({
   name: z.string().trim().min(2).max(160),
   phone: z.string().trim().max(30).nullable().default(null),
   address: z.string().trim().max(1000).nullable().default(null),
   isHeadOffice: z.boolean().default(false),
 });
 
-const branchUpdateSchema = branchSchema
+const branchUpdateSchema = branchCreateSchema
   .partial()
   .extend({
     isActive: z.boolean().optional(),
     rowVersion: z.number().int().positive(),
   });
 
-const warehouseSchema = z.object({
+const warehouseCreateSchema = z.object({
   branchId: identifierSchema,
-  code: z.string().trim().min(1).max(40),
   name: z.string().trim().min(2).max(160),
   warehouseType: z.enum([
     'general',
@@ -41,12 +39,36 @@ const warehouseSchema = z.object({
   allowNegative: z.boolean().default(false),
 });
 
-const warehouseUpdateSchema = warehouseSchema
+const warehouseUpdateSchema = warehouseCreateSchema
   .partial()
   .extend({
     isActive: z.boolean().optional(),
     rowVersion: z.number().int().positive(),
   });
+
+async function nextAutomaticCode(
+  client: Parameters<Parameters<typeof withTransaction>[0]>[0],
+  companyId: string,
+  entity: 'branch' | 'warehouse',
+): Promise<string> {
+  const source = entity === 'branch' ? 'branches' : 'warehouses';
+  const prefix = entity === 'branch' ? 'BR' : 'WH';
+  await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+    `organization:${entity}:${companyId}`,
+  ]);
+  const result = await client.query<{next_number: number}>(
+    `
+      SELECT (
+        COALESCE(MAX((substring(code FROM '^${prefix}-([0-9]+)$'))::integer), 0) + 1
+      )::integer AS next_number
+      FROM ${source}
+      WHERE company_id = $1
+    `,
+    [companyId],
+  );
+  const number = result.rows[0]?.next_number ?? 1;
+  return `${prefix}-${String(number).padStart(4, '0')}`;
+}
 
 export const organizationRouter = Router();
 organizationRouter.use(requireAuthentication);
@@ -81,8 +103,9 @@ organizationRouter.post(
   requirePermissions(PERMISSIONS.BRANCHES_MANAGE),
   asyncRoute(async (request, response) => {
     const user = currentUser(request);
-    const input = branchSchema.parse(request.body);
+    const input = branchCreateSchema.parse(request.body);
     const created = await withTransaction(async (client) => {
+      const code = await nextAutomaticCode(client, user.companyId, 'branch');
       if (input.isHeadOffice) {
         await client.query(
           `
@@ -119,7 +142,7 @@ organizationRouter.post(
         `,
         [
           user.companyId,
-          input.code,
+          code,
           input.name,
           input.phone,
           input.address,
@@ -181,12 +204,11 @@ organizationRouter.patch(
         `
           UPDATE branches
           SET
-            code = COALESCE($4, code),
-            name = COALESCE($5, name),
-            phone = CASE WHEN $6::boolean THEN $7 ELSE phone END,
-            address = CASE WHEN $8::boolean THEN $9 ELSE address END,
-            is_head_office = COALESCE($10, is_head_office),
-            is_active = COALESCE($11, is_active),
+            name = COALESCE($4, name),
+            phone = CASE WHEN $5::boolean THEN $6 ELSE phone END,
+            address = CASE WHEN $7::boolean THEN $8 ELSE address END,
+            is_head_office = COALESCE($9, is_head_office),
+            is_active = COALESCE($10, is_active),
             row_version = row_version + 1
           WHERE id = $1
             AND company_id = $2
@@ -205,7 +227,6 @@ organizationRouter.patch(
           branchId,
           user.companyId,
           input.rowVersion,
-          input.code ?? null,
           input.name ?? null,
           Object.hasOwn(input, 'phone'),
           input.phone ?? null,
@@ -268,45 +289,50 @@ organizationRouter.post(
   requirePermissions(PERMISSIONS.WAREHOUSES_MANAGE),
   asyncRoute(async (request, response) => {
     const user = currentUser(request);
-    const input = warehouseSchema.parse(request.body);
-    const result = await query(
-      `
-        INSERT INTO warehouses (
-          company_id,
-          branch_id,
+    const input = warehouseCreateSchema.parse(request.body);
+    const row = await withTransaction(async (client) => {
+      const code = await nextAutomaticCode(client, user.companyId, 'warehouse');
+      const result = await client.query(
+        `
+          INSERT INTO warehouses (
+            company_id, branch_id, code, name, warehouse_type, allow_negative
+          )
+          SELECT $1, branch.id, $3, $4, $5, $6
+          FROM branches branch
+          WHERE branch.id = $2
+            AND branch.company_id = $1
+            AND branch.is_active = true
+          RETURNING
+            id,
+            branch_id AS "branchId",
+            code,
+            name,
+            warehouse_type AS "warehouseType",
+            allow_negative AS "allowNegative",
+            is_active AS "isActive",
+            row_version AS "rowVersion"
+        `,
+        [
+          user.companyId,
+          input.branchId,
           code,
-          name,
-          warehouse_type,
-          allow_negative
-        )
-        SELECT $1, branch.id, $3, $4, $5, $6
-        FROM branches branch
-        WHERE branch.id = $2
-          AND branch.company_id = $1
-          AND branch.is_active = true
-        RETURNING
-          id,
-          branch_id AS "branchId",
-          code,
-          name,
-          warehouse_type AS "warehouseType",
-          allow_negative AS "allowNegative",
-          is_active AS "isActive",
-          row_version AS "rowVersion"
-      `,
-      [
-        user.companyId,
-        input.branchId,
-        input.code,
-        input.name,
-        input.warehouseType,
-        input.allowNegative,
-      ],
-    );
-    const row = result.rows[0];
-    if (!row) {
-      throw new AppError(422, 'INVALID_BRANCH', 'شعبه انتخاب‌شده معتبر نیست.');
-    }
+          input.name,
+          input.warehouseType,
+          input.allowNegative,
+        ],
+      );
+      const created = result.rows[0];
+      if (!created) {
+        throw new AppError(422, 'INVALID_BRANCH', 'شعبه انتخاب‌شده معتبر نیست.');
+      }
+      await writeAudit(client, request, {
+        action: 'warehouse.create',
+        entityType: 'warehouse',
+        entityId: created.id as string,
+        after: created,
+      });
+      return created;
+    });
     response.status(201).json({data: row});
   }),
 );
@@ -323,11 +349,10 @@ organizationRouter.patch(
         UPDATE warehouses warehouse
         SET
           branch_id = COALESCE($4, warehouse.branch_id),
-          code = COALESCE($5, warehouse.code),
-          name = COALESCE($6, warehouse.name),
-          warehouse_type = COALESCE($7, warehouse.warehouse_type),
-          allow_negative = COALESCE($8, warehouse.allow_negative),
-          is_active = COALESCE($9, warehouse.is_active),
+          name = COALESCE($5, warehouse.name),
+          warehouse_type = COALESCE($6, warehouse.warehouse_type),
+          allow_negative = COALESCE($7, warehouse.allow_negative),
+          is_active = COALESCE($8, warehouse.is_active),
           row_version = warehouse.row_version + 1
         WHERE warehouse.id = $1
           AND warehouse.company_id = $2
@@ -357,7 +382,6 @@ organizationRouter.patch(
         user.companyId,
         input.rowVersion,
         input.branchId ?? null,
-        input.code ?? null,
         input.name ?? null,
         input.warehouseType ?? null,
         input.allowNegative ?? null,

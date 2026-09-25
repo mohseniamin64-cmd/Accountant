@@ -1,22 +1,19 @@
 import {
-  Camera,
   Check,
-  RefreshCw,
+  ScanLine,
   Search,
   Trash2,
 } from 'lucide-react';
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
-  type ChangeEvent,
   type FormEvent,
 } from 'react';
-import {playScanBeepSound, scanImageFile} from '../utils/qrScanner.js';
 import {api, errorMessage} from './api.js';
 import {ContextHelpButton} from './ContextHelpButton.js';
 import {appHelp} from './help-content.js';
+import {SerialBarcodeScanner} from './SerialBarcodeScanner.js';
 import type {AvailableSaleSerial} from './sale.types.js';
 
 interface SaleSerialSelectorProps {
@@ -43,9 +40,8 @@ export function SaleSerialSelector({
   const [search, setSearch] = useState('');
   const [available, setAvailable] = useState<AvailableSaleSerial[]>([]);
   const [pending, setPending] = useState(false);
-  const [scanPending, setScanPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [cameraScannerOpen, setCameraScannerOpen] = useState(false);
 
   const load = useCallback(async (term: string): Promise<AvailableSaleSerial[]> => {
     if (!productId || !warehouseId) {
@@ -117,33 +113,23 @@ export function SaleSerialSelector({
     await load(search);
   }
 
-  async function scanFile(event: ChangeEvent<HTMLInputElement>): Promise<void> {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file || scanPending || disabled) return;
-    setScanPending(true);
+  async function selectScannedSerial(rawValue: string): Promise<void> {
+    const scanned = rawValue.trim();
+    if (!scanned || disabled) return;
     setMessage(null);
+    setSearch(scanned);
     try {
-      const scanned = (await scanImageFile(file))?.trim();
-      if (!scanned) {
-        throw new Error('\u0634\u0645\u0627\u0631\u0647 \u0633\u0631\u06cc\u0627\u0644 \u0627\u0632 \u062a\u0635\u0648\u06cc\u0631 \u062e\u0648\u0627\u0646\u062f\u0647 \u0646\u0634\u062f\u061b \u062a\u0635\u0648\u06cc\u0631 \u0648\u0627\u0636\u062d\u200c\u062a\u0631\u06cc \u0628\u06af\u06cc\u0631\u06cc\u062f.');
-      }
-      setSearch(scanned);
       const matches = await load(scanned);
       const exact = matches.find(
         (item) => item.serialNumber.toLocaleLowerCase('en-US') ===
           scanned.toLocaleLowerCase('en-US'),
       );
       if (!exact) {
-        throw new Error('\u0633\u0631\u06cc\u0627\u0644 \u0627\u0633\u06a9\u0646\u200c\u0634\u062f\u0647 \u062f\u0631 \u06a9\u0627\u0644\u0627 \u0648 \u0627\u0646\u0628\u0627\u0631 \u0627\u0646\u062a\u062e\u0627\u0628\u06cc \u0642\u0627\u0628\u0644 \u0641\u0631\u0648\u0634 \u0646\u06cc\u0633\u062a.');
+        throw new Error('سریال اسکن‌شده در کالا و انبار انتخابی قابل فروش نیست.');
       }
       addSerial(exact.serialNumber);
-      playScanBeepSound();
     } catch (caught) {
       setMessage(errorMessage(caught));
-    } finally {
-      setScanPending(false);
     }
   }
 
@@ -160,25 +146,27 @@ export function SaleSerialSelector({
             {numberFormat.format(requestedCount() ?? 0)}
           </small>
         </div>
-        <button
-          className="button secondary sale-scan-button"
-          disabled={disabled || scanPending}
-          onClick={() => fileInput.current?.click()}
-          type="button"
-        >
-          <Camera aria-hidden />
-          {scanPending ? '\u062f\u0631 \u062d\u0627\u0644 \u062e\u0648\u0627\u0646\u062f\u0646\u2026' : '\u0627\u0633\u06a9\u0646 \u0628\u0627 \u062f\u0648\u0631\u0628\u06cc\u0646'}
-        </button>
-        <input
-          accept="image/*"
-          capture="environment"
-          className="sale-hidden-file"
-          disabled={disabled}
-          onChange={(event) => void scanFile(event)}
-          ref={fileInput}
-          type="file"
-        />
+        <div className="sale-scan-actions">
+          <button
+            aria-expanded={cameraScannerOpen}
+            className="button secondary sale-scan-button"
+            disabled={disabled}
+            onClick={() => setCameraScannerOpen((value) => !value)}
+            type="button"
+          >
+            <ScanLine aria-hidden /> بارکدخوان
+          </button>
+        </div>
       </header>
+
+      <SerialBarcodeScanner
+        onClose={() => setCameraScannerOpen(false)}
+        onDetected={(serialNumber) => {
+          setCameraScannerOpen(false);
+          void selectScannedSerial(serialNumber);
+        }}
+        open={cameraScannerOpen}
+      />
 
       <form className="sale-serial-search" onSubmit={(event) => void submitSearch(event)}>
         <label className="field">
@@ -188,21 +176,17 @@ export function SaleSerialSelector({
             disabled={disabled}
             maxLength={160}
             onChange={(event) => setSearch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return;
+              event.preventDefault();
+              void selectScannedSerial(event.currentTarget.value);
+            }}
             placeholder="SN-..."
             value={search}
           />
         </label>
         <button className="button secondary" disabled={disabled || pending} type="submit">
           <Search aria-hidden />{'\u062c\u0633\u062a\u200c\u0648\u062c\u0648'}
-        </button>
-        <button
-          aria-label={'\u0628\u0627\u0632\u062e\u0648\u0627\u0646\u06cc \u0633\u0631\u06cc\u0627\u0644\u200c\u0647\u0627'}
-          className="button secondary"
-          disabled={disabled || pending}
-          onClick={() => void load(search)}
-          type="button"
-        >
-          <RefreshCw aria-hidden />{'\u0628\u0627\u0632\u062e\u0648\u0627\u0646\u06cc'}
         </button>
       </form>
 

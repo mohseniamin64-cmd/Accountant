@@ -1,4 +1,4 @@
-import {Edit3, Power, ShieldCheck} from 'lucide-react';
+import {Edit3, Power, ShieldCheck, Trash2} from 'lucide-react';
 import {useCallback, useEffect, useState, type FormEvent} from 'react';
 import type {AmountUnit} from '../../shared/contracts.js';
 import {api, errorMessage, postJson} from './api.js';
@@ -13,6 +13,7 @@ import {
   amountIrrToInput,
   buildListPath,
   nonNegativeQuantity,
+  normalizeNumericInput,
   nullableText,
   type ActiveFilter,
 } from './master-data.helpers.js';
@@ -52,6 +53,7 @@ interface ProductRecord {
   isPurchasable: boolean;
   isProducible: boolean;
   isActive: boolean;
+  canDelete: boolean;
   rowVersion: number;
 }
 
@@ -120,6 +122,16 @@ function formatAmount(value: string, unit: AmountUnit): string {
   const formatted = new Intl.NumberFormat('fa-IR').format(BigInt(whole));
   return (fraction ? formatted + '/' + fraction : formatted) + ' ' +
     (unit === 'IRR' ? message.unitIrr : message.unitToman);
+}
+
+function formatPriceInput(value: string): string {
+  const normalized = normalizeNumericInput(value).replace(/[^0-9.]/g, '');
+  if (!normalized) return '';
+  const [wholeValue = '', ...fractionParts] = normalized.split('.');
+  const whole = wholeValue.replace(/^0+(?=\d)/, '') || '0';
+  const formattedWhole = new Intl.NumberFormat('fa-IR').format(BigInt(whole));
+  if (fractionParts.length === 0) return formattedWhole;
+  return formattedWhole + '٫' + fractionParts.join('').slice(0, 1);
 }
 
 function formatDate(value: string | null): string {
@@ -228,7 +240,6 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
     setSuccess(null);
     try {
       const payload = {
-        code: String(form.get('code') ?? '').trim(),
         name: String(form.get('name') ?? '').trim(),
         productType,
         trackingType,
@@ -291,6 +302,23 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
     }
   }
 
+  async function deleteProduct(record: ProductRecord) {
+    if (saving) return;
+    if (!window.confirm('آیا از حذف دائمی این قلم بدون سابقه مطمئن هستید؟')) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await api<void>('/api/products/' + record.id, {method: 'DELETE'});
+      setSuccess(text.productDeleted);
+      await load();
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function saveWarranty(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!warrantyProduct || saving) return;
@@ -323,7 +351,7 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
   }
 
   return (
-    <section className="content-page">
+    <section className="content-page product-page">
       <MasterDataHeader
         title={text.productTitle}
         description={text.productDescription}
@@ -341,7 +369,6 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
           setActive(value);
         }}
         onSearch={submitSearch}
-        onRefresh={() => void load()}
         onCreate={openCreate}
       />
       <ActionFeedback error={error} success={success} />
@@ -353,7 +380,6 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
             <div><p>{text.productDescription}</p><h2>{editing ? text.editProduct : text.newProduct}</h2></div>
           </div>
           <div className="form-grid">
-            <label className="field"><span>{text.code} *</span><input name="code" defaultValue={editing?.code ?? ''} required maxLength={60} /></label>
             <label className="field"><span>{text.name} *</span><input name="name" defaultValue={editing?.name ?? ''} required maxLength={200} /></label>
             <label className="field">
               <span>{text.productType} *</span>
@@ -376,8 +402,8 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
             </label>
             <label className="field"><span>{text.barcode}</span><input name="barcode" defaultValue={editing?.barcode ?? ''} maxLength={120} /></label>
             <label className="field"><span>{text.minimumStock} *</span><input name="minimumStock" defaultValue={editing?.minimumStock ?? '0'} inputMode="decimal" required /></label>
-            <label className="field"><span>{text.salePrice} ({amountUnit === 'IRR' ? message.unitIrr : message.unitToman}) *</span><input name="defaultSalePrice" defaultValue={amountIrrToInput(editing?.defaultSalePriceIrr ?? '0', amountUnit)} inputMode="decimal" required /></label>
-            <label className="field"><span>{text.purchasePrice} ({amountUnit === 'IRR' ? message.unitIrr : message.unitToman}) *</span><input name="defaultPurchasePrice" defaultValue={amountIrrToInput(editing?.defaultPurchasePriceIrr ?? '0', amountUnit)} inputMode="decimal" required /></label>
+            <label className="field"><span>{text.salePrice} ({amountUnit === 'IRR' ? message.unitIrr : message.unitToman}) *</span><input name="defaultSalePrice" defaultValue={formatPriceInput(amountIrrToInput(editing?.defaultSalePriceIrr ?? '0', amountUnit))} inputMode="decimal" onInput={(event) => { event.currentTarget.value = formatPriceInput(event.currentTarget.value); }} required /></label>
+            <label className="field"><span>{text.purchasePrice} ({amountUnit === 'IRR' ? message.unitIrr : message.unitToman}) *</span><input name="defaultPurchasePrice" defaultValue={formatPriceInput(amountIrrToInput(editing?.defaultPurchasePriceIrr ?? '0', amountUnit))} inputMode="decimal" onInput={(event) => { event.currentTarget.value = formatPriceInput(event.currentTarget.value); }} required /></label>
             <label className="field"><span>{text.taxRate} *</span><input name="taxRate" defaultValue={editing?.taxRate ?? '0'} type="number" min="0" max="100" step="0.01" required /></label>
             <label className="field full"><span>{text.description}</span><textarea name="description" defaultValue={editing?.description ?? ''} maxLength={2000} rows={3} /></label>
           </div>
@@ -410,7 +436,7 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
                     <td>{record.code}</td><td>{record.name}</td><td>{typeLabel(record.productType)}</td>
                     <td>{trackingLabel(record.trackingType)}</td><td>{record.unitName}</td>
                     <td>{formatAmount(record.defaultSalePriceIrr, amountUnit)}</td><td><StatusPill active={record.isActive} /></td>
-                    <td><ProductActions record={record} saving={saving} canManage={canManage} canViewWarranty={canViewWarranty} onEdit={openEdit} onStatus={changeStatus} onWarranty={loadWarranty} /></td>
+                    <td><ProductActions record={record} saving={saving} canManage={canManage} canViewWarranty={canViewWarranty} onEdit={openEdit} onStatus={changeStatus} onDelete={deleteProduct} onWarranty={loadWarranty} /></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -424,7 +450,7 @@ export function ProductsPage({permissions, amountUnit}: ProductsPageProps) {
                   <dt>{text.baseUnit}</dt><dd>{record.unitName}</dd>
                   <dt>{text.salePrice}</dt><dd>{formatAmount(record.defaultSalePriceIrr, amountUnit)}</dd>
                 </dl>
-                <ProductActions record={record} saving={saving} canManage={canManage} canViewWarranty={canViewWarranty} onEdit={openEdit} onStatus={changeStatus} onWarranty={loadWarranty} />
+                <ProductActions record={record} saving={saving} canManage={canManage} canViewWarranty={canViewWarranty} onEdit={openEdit} onStatus={changeStatus} onDelete={deleteProduct} onWarranty={loadWarranty} />
               </article>
             ))}</div>
           </>
@@ -475,6 +501,7 @@ function ProductActions({
   canViewWarranty,
   onEdit,
   onStatus,
+  onDelete,
   onWarranty,
 }: {
   record: ProductRecord;
@@ -483,6 +510,7 @@ function ProductActions({
   canViewWarranty: boolean;
   onEdit: (record: ProductRecord) => void;
   onStatus: (record: ProductRecord) => Promise<void>;
+  onDelete: (record: ProductRecord) => Promise<void>;
   onWarranty: (record: ProductRecord) => Promise<void>;
 }) {
   return (
@@ -495,6 +523,7 @@ function ProductActions({
       {canManage ? (
         <>
           <button className="button secondary" disabled={saving} onClick={() => onEdit(record)} type="button"><Edit3 aria-hidden />{text.edit}</button>
+          {record.canDelete ? <button className="button secondary" disabled={saving} onClick={() => void onDelete(record)} type="button"><Trash2 aria-hidden />{text.delete}</button> : null}
           <button className="button secondary" disabled={saving} onClick={() => void onStatus(record)} type="button"><Power aria-hidden />{record.isActive ? text.deactivate : text.activate}</button>
         </>
       ) : null}

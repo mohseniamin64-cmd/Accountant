@@ -1,4 +1,4 @@
-import {Eye, RefreshCw, Search} from 'lucide-react';
+import {Eye, Search} from 'lucide-react';
 import {useCallback, useEffect, useState, type FormEvent} from 'react';
 import type {AmountUnit} from '../../shared/contracts.js';
 import {api, errorMessage} from './api.js';
@@ -19,15 +19,18 @@ import type {
   ServiceStatus,
 } from './service.types.js';
 
+export type ServiceOrderStatusFilter = ServiceStatus | 'all' | 'archive';
+
 interface Props {
   options: ServiceOptions;
   amountUnit: AmountUnit;
   permissions: readonly string[];
   refreshVersion: number;
+  statusFilter: ServiceOrderStatusFilter;
+  onStatusFilterChange: (status: ServiceOrderStatusFilter) => void;
   onChanged: () => Promise<void>;
 }
 
-type StatusFilter = ServiceStatus | 'all';
 const PAGE_SIZE = 25;
 
 export function ServiceOrderPanel({
@@ -35,11 +38,12 @@ export function ServiceOrderPanel({
   amountUnit,
   permissions,
   refreshVersion,
+  statusFilter,
+  onStatusFilterChange,
   onChanged,
 }: Props) {
   const [records, setRecords] = useState<ServiceOrderSummary[]>([]);
   const [selected, setSelected] = useState<ServiceOrderDetail | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [queryInput, setQueryInput] = useState('');
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
@@ -94,6 +98,10 @@ export function ServiceOrderPanel({
     void loadRecords();
   }, [loadRecords, reloadVersion, refreshVersion]);
 
+  useEffect(() => {
+    setOffset(0);
+  }, [statusFilter]);
+
   function submitSearch(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     setOffset(0);
@@ -107,7 +115,7 @@ export function ServiceOrderPanel({
   }
 
   return (
-    <div className="service-order-panel">
+    <div className="service-order-panel" id="service-queue">
       <section className="service-queue-card">
         <div className="service-panel-heading">
           <ContextHelpButton help={appHelp.serviceQueue} />
@@ -115,7 +123,6 @@ export function ServiceOrderPanel({
             <h2>صف پرونده‌های خدمات</h2>
             <p>جست‌وجو با سریال، کد پیگیری یا نام مشتری انجام می‌شود.</p>
           </div>
-          <RefreshCw aria-hidden />
         </div>
         <form className="service-toolbar" onSubmit={submitSearch}>
           <label className="field">
@@ -134,12 +141,12 @@ export function ServiceOrderPanel({
             <span>وضعیت پرونده</span>
             <select
               onChange={(event) => {
-                setOffset(0);
-                setStatusFilter(event.target.value as StatusFilter);
+                onStatusFilterChange(event.target.value as ServiceOrderStatusFilter);
               }}
               value={statusFilter}
             >
               <option value="all">همه وضعیت‌ها</option>
+              <option value="archive">بایگانی: تحویل‌شده و لغوشده</option>
               {serviceStatusOrder.map((status) => (
                 <option key={status} value={status}>{serviceStatusText(status)}</option>
               ))}
@@ -148,14 +155,6 @@ export function ServiceOrderPanel({
           <div className="service-toolbar-actions">
             <button className="button secondary" disabled={pending} type="submit">
               <Search aria-hidden /> جست‌وجو
-            </button>
-            <button
-              className="button secondary"
-              disabled={pending}
-              onClick={() => setReloadVersion((value) => value + 1)}
-              type="button"
-            >
-              <RefreshCw aria-hidden /> بازخوانی
             </button>
           </div>
         </form>
@@ -175,7 +174,8 @@ export function ServiceOrderPanel({
                     <th>مشتری</th>
                     <th>گارانتی</th>
                     <th>وضعیت</th>
-                    <th>پذیرش</th>
+                   <th>پذیرش</th>
+                    <th>مسئول و اولویت</th>
                     <th>عملیات</th>
                   </tr>
                 </thead>
@@ -200,7 +200,8 @@ export function ServiceOrderPanel({
                           {serviceStatusText(record.status)}
                         </span>
                       </td>
-                      <td>{formatJalaliDateTime(record.receivedAt)}</td>
+                     <td>{formatJalaliDateTime(record.receivedAt)}</td>
+                      <td><strong>{record.assignedToName ?? 'بدون مسئول'}</strong><small className="service-cell-note">{record.priority === 'urgent' ? 'فوری' : record.priority === 'high' ? 'بالا' : record.priority === 'low' ? 'کم' : 'عادی'}{record.dueAt ? ' · موعد ' + formatJalaliDateTime(record.dueAt) : ''}</small></td>
                       <td>
                         <button
                           className="button secondary"
@@ -232,7 +233,9 @@ export function ServiceOrderPanel({
                     <div><dt>سریال</dt><dd>{record.serialNumber}</dd></div>
                     <div><dt>مشتری</dt><dd>{record.customerName}</dd></div>
                     <div><dt>گارانتی</dt><dd>{warrantyDecisionText(record.warrantyDecision)}</dd></div>
-                    <div><dt>پذیرش</dt><dd>{formatJalaliDateTime(record.receivedAt)}</dd></div>
+                   <div><dt>پذیرش</dt><dd>{formatJalaliDateTime(record.receivedAt)}</dd></div>
+                    <div><dt>مسئول</dt><dd>{record.assignedToName ?? 'بدون مسئول'}</dd></div>
+                    <div><dt>اولویت</dt><dd>{record.priority === 'urgent' ? 'فوری' : record.priority === 'high' ? 'بالا' : record.priority === 'low' ? 'کم' : 'عادی'}</dd></div>
                   </dl>
                   <button
                     className="button secondary"

@@ -1,4 +1,4 @@
-import {Eye, EyeOff} from 'lucide-react';
+import {Eye, EyeOff, LockKeyhole} from 'lucide-react';
 import {useId, useState} from 'react';
 
 interface PasswordFieldProps {
@@ -10,6 +10,7 @@ interface PasswordFieldProps {
   maxLength?: number;
   pattern?: string;
   title?: string;
+  showLockIcon?: boolean;
 }
 
 export function PasswordField({
@@ -21,12 +22,13 @@ export function PasswordField({
   maxLength,
   pattern,
   title,
+  showLockIcon = false,
 }: PasswordFieldProps) {
   const inputId = useId();
   const [isVisible, setIsVisible] = useState(false);
 
   return (
-    <div className="field password-field">
+    <div className={showLockIcon ? 'field password-field password-field--with-leading-icon' : 'field password-field'}>
       <label htmlFor={inputId}>
         {label}
         {required ? <b aria-label="الزامی"> *</b> : null}
@@ -44,6 +46,7 @@ export function PasswordField({
           title={title}
           dir="ltr"
         />
+        {showLockIcon ? <LockKeyhole className="field-leading-icon" aria-hidden /> : null}
         <button
           aria-controls={inputId}
           aria-label={isVisible ? 'پنهان‌کردن رمز عبور' : 'نمایش رمز عبور'}

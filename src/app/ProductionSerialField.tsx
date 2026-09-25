@@ -1,20 +1,17 @@
 import {
-  Camera,
   RefreshCw,
   ScanLine,
   X,
 } from 'lucide-react';
 import {
-  useRef,
   useState,
-  type ChangeEvent,
 } from 'react';
 import {api, errorMessage} from './api.js';
 import {ContextHelpButton} from './ContextHelpButton.js';
 import {appHelp} from './help-content.js';
 import {parseSerialNumbers} from './purchase.helpers.js';
 import type {AvailableProductionSerial} from './production.types.js';
-import {playScanBeepSound, scanImageFile} from '../utils/qrScanner.js';
+import {SerialBarcodeScanner} from './SerialBarcodeScanner.js';
 
 interface ProductionSerialFieldProps {
   name: string;
@@ -48,8 +45,8 @@ export function ProductionSerialField({
   const [available, setAvailable] = useState<AvailableProductionSerial[]>([]);
   const [search, setSearch] = useState('');
   const [pending, setPending] = useState(false);
+  const [cameraScannerOpen, setCameraScannerOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const selected = safeSerials(value);
 
   async function loadAvailable(): Promise<void> {
@@ -86,7 +83,6 @@ export function ProductionSerialField({
     }
     setValue([...current, serialNumber].join('\n'));
     setMessage(null);
-    playScanBeepSound();
   }
 
   function removeSerial(serialNumber: string): void {
@@ -95,24 +91,6 @@ export function ProductionSerialField({
         .filter((item) => item !== serialNumber)
         .join('\n'),
     );
-  }
-
-  async function scanFile(event: ChangeEvent<HTMLInputElement>): Promise<void> {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    setPending(true);
-    setMessage(null);
-    try {
-      const result = await scanImageFile(file);
-      if (!result) {
-        setMessage('سریال یا بارکد خوانایی در تصویر پیدا نشد؛ آن را دستی وارد کنید.');
-        return;
-      }
-      addSerial(result.trim());
-    } finally {
-      setPending(false);
-    }
   }
 
   return (
@@ -125,22 +103,24 @@ export function ProductionSerialField({
             هر سریال را در یک خط وارد کنید. تعداد نهایی هنگام ثبت کنترل می‌شود.
           </small>
         </div>
-        <button
-          className="button secondary"
-          disabled={pending}
-          onClick={() => fileRef.current?.click()}
-          type="button"
-        >
-          <Camera aria-hidden /> اسکن با دوربین
-        </button>
+        <div className="production-serial-actions">
+          <button
+            className="button secondary"
+            disabled={pending}
+            onClick={() => setCameraScannerOpen(true)}
+            type="button"
+          >
+            <ScanLine aria-hidden /> بارکدخوان
+          </button>
+        </div>
       </header>
-      <input
-        accept="image/*"
-        capture="environment"
-        className="production-hidden-file"
-        onChange={(event) => void scanFile(event)}
-        ref={fileRef}
-        type="file"
+      <SerialBarcodeScanner
+        onClose={() => setCameraScannerOpen(false)}
+        onDetected={(serialNumber) => {
+          setCameraScannerOpen(false);
+          addSerial(serialNumber);
+        }}
+        open={cameraScannerOpen}
       />
       <textarea
         name={name}

@@ -9,6 +9,7 @@ import {enforceSameOrigin} from './common/origin.js';
 import {requestContext} from './common/request-context.js';
 import {config} from './config.js';
 import {accountingRouter} from './modules/accounting/routes.js';
+import {auditRouter} from './modules/audit/routes.js';
 import {backupRouter} from './modules/backup/routes.js';
 import {populateAuthentication} from './modules/auth/middleware.js';
 import {authRouter} from './modules/auth/routes.js';
@@ -18,6 +19,7 @@ import {organizationRouter} from './modules/organization/routes.js';
 import {partiesRouter} from './modules/parties/routes.js';
 import {productsRouter} from './modules/products/routes.js';
 import {productionRouter} from './modules/production/routes.js';
+import {recoveryLaunchRouter} from './recovery/routes.js';
 import {
   companyLogoRouter,
   settingsRouter,
@@ -60,9 +62,11 @@ export function configureApi(app: Express): void {
 
   app.use('/api', bootstrapRouter);
   app.use('/api', companyLogoRouter);
+  app.use('/api', recoveryLaunchRouter);
   app.use('/api/sms/gateway', smsGatewayRouter);
   app.use('/api/service/public', servicePublicRouter);
   app.use('/api/accounting', accountingRouter);
+  app.use('/api/audit', auditRouter);
   app.use('/api/backups', backupRouter);
   app.use('/api/setup', setupRouter);
   app.use('/api/auth', authRouter);

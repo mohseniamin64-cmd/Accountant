@@ -1,5 +1,144 @@
 .settings-company-card {
   margin-bottom: 28px;
+  justify-content: center;
+  text-align: center;
+}
+
+.company-logo-section {
+  margin-top: 0;
+}
+
+.settings-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.settings-compact-grid .settings-section--compact {
+  min-width: 0;
+  margin-top: 0;
+}
+
+.settings-compact-grid .service-output-content {
+  width: 100%;
+}
+
+.backup-policy-form {
+  width: min(100%, 860px);
+  margin-inline: auto;
+}
+
+.backup-identity-summary {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 18px;
+  text-align: center;
+  background: var(--card-tint);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.backup-identity-summary div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.backup-identity-summary span,
+.backup-identity-summary small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.backup-identity-summary strong {
+  overflow-wrap: anywhere;
+  color: var(--navy);
+  font-size: 0.86rem;
+}
+
+.backup-identity-summary small {
+  grid-column: 1 / -1;
+}
+
+/* تنظیمات اجرایی کوتاه، نباید بی‌دلیل تمام عرض میزکار را بگیرند. */
+.settings-section > .settings-summary-grid,
+.sms-configuration-form,
+.token-card {
+  width: min(100%, 860px);
+  margin-inline: auto;
+}
+
+.sms-configuration-form {
+  margin-bottom: 20px;
+}
+
+.settings-section--compact .form-card {
+  margin-bottom: 0;
+}
+
+.service-output-content {
+  width: min(100%, 840px);
+  margin-inline: auto;
+}
+
+.service-output-form {
+  margin-bottom: 0;
+}
+
+.service-output-form .form-grid {
+  gap: 14px;
+}
+
+.service-output-form .form-actions {
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.company-logo-form {
+  display: grid;
+  gap: 18px;
+}
+
+.company-logo-preview {
+  min-height: 108px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: var(--card-tint);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.company-logo-preview .brand-logo {
+  width: min(220px, 42%);
+  max-height: 76px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  object-fit: contain;
+}
+
+.company-logo-preview > div {
+  max-width: 430px;
+  text-align: right;
+}
+
+.company-logo-preview strong {
+  color: var(--navy-strong);
+}
+
+.company-logo-preview p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.8;
 }
 
 .settings-section {
@@ -280,6 +419,10 @@
 }
 
 @media (max-width: 900px) {
+  .settings-compact-grid {
+    grid-template-columns: 1fr;
+  }
+
   .settings-summary-grid {
     grid-template-columns: 1fr;
   }
@@ -308,6 +451,39 @@
     margin-top: 26px;
   }
 
+  .company-logo-section {
+    margin-top: 0;
+  }
+
+  .service-output-content {
+    width: 100%;
+  }
+
+  .settings-section > .settings-summary-grid,
+  .sms-configuration-form,
+  .token-card {
+    width: 100%;
+  }
+
+  .backup-identity-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .company-logo-preview {
+    align-items: stretch;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .company-logo-preview .brand-logo {
+    width: min(220px, 100%);
+    margin: 0 auto;
+  }
+
+  .company-logo-preview > div {
+    text-align: center;
+  }
+
   .toggle-list {
     grid-template-columns: 1fr;
   }
@@ -330,5 +506,99 @@
 
   .token-card .button {
     width: 100%;
+  }
+}
+
+.login-lock-section {
+  min-width: 0;
+}
+
+.security-lock-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.security-lock-status {
+  padding: 12px 14px;
+  background: #f2f6fb;
+  border: 1px solid #d7e2ed;
+  border-radius: 12px;
+}
+
+.security-lock-status .toggle-row {
+  background: #fff;
+}
+
+.security-lock-status p {
+  margin: 8px 4px 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.8;
+}
+
+.security-audit-card {
+  min-height: 72px;
+  padding: 13px 15px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  color: inherit;
+  background: #f7f9fc;
+  border: 1px solid #d5e0ea;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.security-audit-card:hover {
+  background: #eef5fb;
+  border-color: #a9c8e3;
+  transform: translateY(-1px);
+}
+
+.security-audit-card > svg {
+  width: 23px;
+  height: 23px;
+  color: var(--blue);
+}
+
+.security-audit-card > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.security-audit-card strong {
+  color: var(--navy-strong);
+  font-size: 0.86rem;
+}
+
+.security-audit-card small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+
+.security-audit-card__action {
+  padding: 7px 10px;
+  color: var(--blue);
+  background: #fff;
+  border: 1px solid #c6d9e9;
+  border-radius: 9px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .security-audit-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .security-audit-card__action {
+    grid-column: 2;
+    justify-self: start;
   }
 }

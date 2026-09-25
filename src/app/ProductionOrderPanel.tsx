@@ -586,16 +586,6 @@ export function ProductionOrderPanel({
             >
               <Search aria-hidden /> اعمال فیلتر
             </button>
-            <button
-              className="button secondary"
-              disabled={pending}
-              onClick={() =>
-                setReloadVersion((value) => value + 1)
-              }
-              type="button"
-            >
-              <RefreshCw aria-hidden /> بازخوانی
-            </button>
           </div>
         </div>
       </form>

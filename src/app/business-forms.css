@@ -1,0 +1,151 @@
+/* Include plain table editors and serial inputs, not only .field controls. */
+:is(.business-forms, .purchase-workspace) {
+  text-align: center;
+}
+:is(.business-forms, .purchase-workspace) :is(h1, h2, h3, h4, h5, h6,
+  label, legend, p, th, td, dt, dd, caption, summary, small, strong,
+  input:not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea) {
+  text-align: center !important;
+}
+:is(.business-forms, .purchase-workspace) :is(input, textarea)::placeholder {
+  text-align: center !important;
+}
+:is(.business-forms, .purchase-workspace) select {
+  text-align-last: center !important;
+}
+:is(.business-forms, .purchase-workspace) :is(input, select, textarea) {
+  /* Balanced padding keeps centered text at the actual control midpoint. */
+  padding-inline: 12px;
+}
+:is(.business-forms, .purchase-workspace) select { padding-inline: 28px; }
+:is(.business-forms, .purchase-workspace) .field-control > input { padding-inline: 44px; }
+:is(.business-forms, .purchase-workspace) .button {
+  text-align: center;
+  justify-content: center;
+}
+/* Shared alignment for trade, warehouse, production and report forms. */
+.main-content:has(.business-forms) { padding: 10px; }
+.content-page.business-forms,
+.content-page:has(.business-forms) { width: 100%; max-width: none; }
+.business-forms :is(.form-card, .master-form) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  padding: 14px;
+}
+.business-forms :is(h1, h2, h3, p, th, td, .field, .field > span, .field > label) {
+  text-align: center;
+}
+.business-forms .field :is(input:not([type=checkbox]):not([type=radio]), select, textarea) {
+  text-align: center !important;
+}
+.business-forms .field select { text-align-last: center; padding-inline: 28px; }
+.business-forms .field :is(input:not([type=checkbox]):not([type=radio]), select) {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  font-size: .82rem;
+}
+.business-forms .field-control > input { padding-inline: 44px; }
+.business-forms .field textarea { min-height: 64px; resize: vertical; }
+
+/* Each field occupies label/control/help tracks shared with its neighbours. */
+.business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+  .production-form-grid, .production-component-grid, .production-stage-controls,
+  .production-filter-grid, .purchase-filter-grid, .accounting-report-filter,
+  .service-report-filter) {
+  display: grid;
+  align-items: stretch;
+  gap: 6px 12px;
+}
+.business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+  .production-form-grid, .production-component-grid) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.business-forms :is(.production-filter-grid, .purchase-filter-grid,
+  .accounting-report-filter, .service-report-filter) {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+  .production-form-grid, .production-component-grid, .production-stage-controls,
+  .production-filter-grid, .purchase-filter-grid, .accounting-report-filter,
+  .service-report-filter) > .field {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.business-forms .field > :is(span, label):first-child {
+  align-self: end;
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+  .production-form-grid, .production-component-grid, .production-stage-controls,
+  .production-filter-grid, .purchase-filter-grid, .accounting-report-filter,
+  .service-report-filter) > .field > :first-child { grid-row: 1; }
+.business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+  .production-form-grid, .production-component-grid, .production-stage-controls,
+  .production-filter-grid, .purchase-filter-grid, .accounting-report-filter,
+  .service-report-filter) > .field > :nth-child(2) { grid-row: 2; align-self: stretch; margin: 0; }
+.business-forms .field > small { grid-row: 3; margin: 0; }
+.business-forms .service-report-filter > .field,
+.business-forms .service-report-action { width: 100%; max-width: none; }
+.business-forms .service-report-filter .field > :is(label, span) {
+  height: auto;
+  min-height: 0;
+}
+.business-forms .production-stage-controls > .button {
+  grid-row: span 3;
+  align-self: center;
+  min-height: 44px;
+}
+.business-forms :is(.purchase-filter-actions, .production-filter-actions,
+  .accounting-report-actions, .service-report-action) {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  align-self: stretch;
+}
+.business-forms :is(.purchase-filter-actions, .production-filter-actions,
+  .accounting-report-actions, .service-report-action) > .button {
+  grid-row: 2;
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  width: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  justify-content: center;
+}
+.business-forms :is(.sale-official-option, .production-check-field) {
+  grid-row: span 3;
+  align-self: center;
+  justify-content: center;
+}
+.business-forms :is(.purchase-header-description, .field.full) { grid-column: 1 / -1; }
+.business-forms :is(.form-actions, .master-form-actions, .purchase-form-actions) {
+  justify-content: center;
+}
+@media (max-width: 1000px) {
+  .business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+    .production-form-grid, .production-component-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .business-forms :is(.form-grid, .purchase-header-grid, .purchase-line-grid,
+    .production-form-grid, .production-component-grid, .production-stage-controls,
+    .production-filter-grid, .purchase-filter-grid, .accounting-report-filter,
+    .service-report-filter) { grid-template-columns: minmax(0, 1fr); }
+  .business-forms :is(.production-wide-field, .production-component-product,
+    .production-component-notes, .purchase-product-field, .purchase-description-field,
+    .accounting-report-account) { grid-column: 1 / -1; }
+}

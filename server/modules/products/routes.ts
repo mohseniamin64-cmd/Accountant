@@ -21,7 +21,6 @@ import {
 } from '../auth/middleware.js';
 
 const productSchema = z.object({
-  code: z.string().trim().min(1).max(60),
   name: z.string().trim().min(2).max(200),
   productType: z.enum([
     'purchased',
@@ -50,6 +49,49 @@ const productUpdateSchema = productSchema
     isActive: z.boolean().optional(),
     rowVersion: z.number().int().positive(),
   });
+
+async function nextAutomaticProductCode(
+  client: Parameters<Parameters<typeof withTransaction>[0]>[0],
+  companyId: string,
+): Promise<string> {
+  await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+    `products:${companyId}`,
+  ]);
+  const result = await client.query<{next_number: number}>(
+    `
+      SELECT (
+        COALESCE(MAX((substring(code FROM '^IT-([0-9]+)$'))::integer), 0) + 1
+      )::integer AS next_number
+      FROM products
+      WHERE company_id = $1
+    `,
+    [companyId],
+  );
+  const number = result.rows[0]?.next_number ?? 1;
+  return `IT-${String(number).padStart(4, '0')}`;
+}
+
+function productHasUsageSql(productId: string): string {
+  return `EXISTS (
+    SELECT 1 FROM inventory_balances WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM inventory_batches WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM serial_numbers WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM inventory_movements WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM stock_reservations WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM stock_transfer_lines WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM purchase_invoice_lines WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM sale_invoice_lines WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM warranty_policy_versions WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM boms WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM bom_components WHERE component_product_id = ${productId}
+    UNION ALL SELECT 1 FROM production_orders WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM production_materials WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM production_outputs WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM production_waste WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM subcontract_order_lines WHERE product_id = ${productId}
+    UNION ALL SELECT 1 FROM service_parts WHERE product_id = ${productId}
+  )`;
+}
 
 const warrantyPolicySchema = z.object({
   effectiveFrom: isoDateSchema,
@@ -109,6 +151,7 @@ productsRouter.get(
           product.is_purchasable AS "isPurchasable",
           product.is_producible AS "isProducible",
           product.is_active AS "isActive",
+          NOT ${productHasUsageSql('product.id')} AS "canDelete",
           product.row_version AS "rowVersion"
         FROM products product
         JOIN units unit ON unit.id = product.base_unit_id
@@ -135,7 +178,9 @@ productsRouter.post(
   asyncRoute(async (request, response) => {
     const user = currentUser(request);
     const input = productSchema.parse(request.body);
-    const result = await query(
+    const row = await withTransaction(async (client) => {
+      const code = await nextAutomaticProductCode(client, user.companyId);
+      const result = await client.query(
       `
         INSERT INTO products (
           company_id,
@@ -171,7 +216,7 @@ productsRouter.post(
       `,
       [
         user.companyId,
-        input.code,
+        code,
         input.name,
         input.productType,
         input.trackingType,
@@ -185,16 +230,24 @@ productsRouter.post(
         input.isSellable,
         input.isPurchasable,
         input.isProducible,
-      ],
-    );
-    const row = result.rows[0];
-    if (!row) {
-      throw new AppError(
-        422,
-        'INVALID_UNIT',
-        'واحد اندازه‌گیری انتخاب‌شده معتبر نیست.',
+        ],
       );
-    }
+      const created = result.rows[0];
+      if (!created) {
+        throw new AppError(
+          422,
+          'INVALID_UNIT',
+          'واحد اندازه‌گیری انتخاب‌شده معتبر نیست.',
+        );
+      }
+      await writeAudit(client, request, {
+        action: 'product.create',
+        entityType: 'product',
+        entityId: created.id as string,
+        after: created,
+      });
+      return created;
+    });
     response.status(201).json({data: row});
   }),
 );
@@ -248,31 +301,30 @@ productsRouter.patch(
         `
           UPDATE products product
           SET
-            code = COALESCE($4, product.code),
-            name = COALESCE($5, product.name),
-            product_type = COALESCE($6, product.product_type),
-            tracking_type = COALESCE($7, product.tracking_type),
-            base_unit_id = COALESCE($8, product.base_unit_id),
-            barcode = CASE WHEN $9::boolean THEN $10 ELSE product.barcode END,
-            description = CASE WHEN $11::boolean THEN $12 ELSE product.description END,
-            minimum_stock = COALESCE($13, product.minimum_stock),
-            default_sale_price_irr = COALESCE($14, product.default_sale_price_irr),
-            default_purchase_price_irr = COALESCE($15, product.default_purchase_price_irr),
-            tax_rate = COALESCE($16, product.tax_rate),
-            is_sellable = COALESCE($17, product.is_sellable),
-            is_purchasable = COALESCE($18, product.is_purchasable),
-            is_producible = COALESCE($19, product.is_producible),
-            is_active = COALESCE($20, product.is_active),
+            name = COALESCE($4, product.name),
+            product_type = COALESCE($5, product.product_type),
+            tracking_type = COALESCE($6, product.tracking_type),
+            base_unit_id = COALESCE($7, product.base_unit_id),
+            barcode = CASE WHEN $8::boolean THEN $9 ELSE product.barcode END,
+            description = CASE WHEN $10::boolean THEN $11 ELSE product.description END,
+            minimum_stock = COALESCE($12, product.minimum_stock),
+            default_sale_price_irr = COALESCE($13, product.default_sale_price_irr),
+            default_purchase_price_irr = COALESCE($14, product.default_purchase_price_irr),
+            tax_rate = COALESCE($15, product.tax_rate),
+            is_sellable = COALESCE($16, product.is_sellable),
+            is_purchasable = COALESCE($17, product.is_purchasable),
+            is_producible = COALESCE($18, product.is_producible),
+            is_active = COALESCE($19, product.is_active),
             row_version = product.row_version + 1
           WHERE product.id = $1
             AND product.company_id = $2
             AND product.row_version = $3
             AND (
-              $8::uuid IS NULL
+              $7::uuid IS NULL
               OR EXISTS (
                 SELECT 1
                 FROM units unit
-                WHERE unit.id = $8
+                WHERE unit.id = $7
                   AND unit.company_id = $2
                   AND unit.is_active = true
               )
@@ -290,7 +342,6 @@ productsRouter.patch(
           productId,
           user.companyId,
           input.rowVersion,
-          input.code ?? null,
           input.name ?? null,
           input.productType ?? null,
           input.trackingType ?? null,
@@ -320,6 +371,53 @@ productsRouter.patch(
       return row;
     });
     response.json({data: updated});
+  }),
+);
+
+productsRouter.delete(
+  '/:id',
+  requirePermissions(PERMISSIONS.INVENTORY_MANAGE),
+  asyncRoute(async (request, response) => {
+    const user = currentUser(request);
+    const productId = identifierSchema.parse(request.params.id);
+    await withTransaction(async (client) => {
+      const beforeResult = await client.query(
+        `
+          SELECT *
+          FROM products
+          WHERE id = $1 AND company_id = $2
+          FOR UPDATE
+        `,
+        [productId, user.companyId],
+      );
+      const before = beforeResult.rows[0];
+      if (!before) {
+        throw new AppError(404, 'PRODUCT_NOT_FOUND', 'کالا پیدا نشد.');
+      }
+      const usage = await client.query<{has_usage: boolean}>(
+        `SELECT ${productHasUsageSql('$1')} AS has_usage`,
+        [productId],
+      );
+      if (usage.rows[0]?.has_usage) {
+        throw new AppError(
+          409,
+          'PRODUCT_DELETE_LOCKED',
+          'این قلم سابقه عملیاتی دارد و فقط قابل غیرفعال‌سازی است.',
+        );
+      }
+      await client.query(
+        'DELETE FROM products WHERE id = $1 AND company_id = $2',
+        [productId, user.companyId],
+      );
+      await writeAudit(client, request, {
+        action: 'product.delete',
+        entityType: 'product',
+        entityId: productId,
+        before,
+        after: {deleted: true},
+      });
+    });
+    response.status(204).end();
   }),
 );
 

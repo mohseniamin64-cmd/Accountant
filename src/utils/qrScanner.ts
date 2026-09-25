@@ -1,4 +1,5 @@
 import jsQR from 'jsqr';
+import {decodeBarcodePixels, drawBarcodeImage, rotateBarcodePixels, type BarcodePixels} from '../app/barcode-image.js';
 
 interface DetectedBarcode {
   rawValue?: string;
@@ -17,14 +18,26 @@ type ScannerWindow = Window & {
   webkitAudioContext?: typeof AudioContext;
 };
 
+let scanAudioContext: AudioContext | null = null;
+
+export function prepareScanBeepSound(): void {
+  try {
+    const scannerWindow = window as ScannerWindow;
+    const AudioContextConstructor = window.AudioContext ?? scannerWindow.webkitAudioContext;
+    if (!AudioContextConstructor) return;
+    scanAudioContext ??= new AudioContextConstructor();
+    if (scanAudioContext.state === 'suspended') void scanAudioContext.resume();
+  } catch {
+    // Sound is optional feedback and must never block scanning.
+  }
+}
+
 // Audio Context beep generator
 export function playScanBeepSound(): void {
   try {
-    const scannerWindow = window as ScannerWindow;
-    const AudioContextConstructor =
-      window.AudioContext ?? scannerWindow.webkitAudioContext;
-    if (!AudioContextConstructor) return;
-    const audioCtx = new AudioContextConstructor();
+    prepareScanBeepSound();
+    const audioCtx = scanAudioContext;
+    if (!audioCtx) return;
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -38,13 +51,17 @@ export function playScanBeepSound(): void {
 
     oscillator.start();
     oscillator.stop(audioCtx.currentTime + 0.15);
+    oscillator.addEventListener('ended', () => {
+      oscillator.disconnect();
+      gainNode.disconnect();
+    }, {once: true});
   } catch (e) {
     console.warn('Scan sound could not play:', e);
   }
 }
 
 // Decode QR Code or Barcode from Canvas / Image Pixel Data
-export async function scanImageData(canvas: HTMLCanvasElement): Promise<string | null> {
+export async function scanImageData(canvas: HTMLCanvasElement, cancelled: () => boolean = () => false): Promise<string | null> {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
@@ -73,53 +90,54 @@ export async function scanImageData(canvas: HTMLCanvasElement): Promise<string |
   try {
     const imageData = ctx.getImageData(0, 0, width, height);
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'dontInvert',
+      inversionAttempts: 'attemptBoth',
     });
     if (code && code.data) {
       return code.data;
-    }
-    // Try inverted if not found
-    const codeInverted = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'onlyInvert',
-    });
-    if (codeInverted && codeInverted.data) {
-      return codeInverted.data;
     }
   } catch (err) {
     console.warn('jsQR scan error:', err);
   }
 
+  let pixels: BarcodePixels = ctx.getImageData(0, 0, width, height);
+  for (let orientation = 0; orientation < 2; orientation++) {
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    if (cancelled()) return null;
+    const value = await decodeBarcodePixels(pixels);
+    if (value) return value;
+    if (orientation === 0) {
+      pixels = rotateBarcodePixels(pixels);
+    }
+  }
   return null;
 }
 
 // Helper to decode an uploaded image file
-export function scanImageFile(file: File): Promise<string | null> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          const result = await scanImageData(canvas);
-          resolve(result);
-        } else {
-          resolve(null);
-        }
+export async function scanImageFile(file: File, cancelled: () => boolean = () => false): Promise<string | null> {
+  const url = URL.createObjectURL(file);
+  const canvas = document.createElement('canvas');
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      const timeout = setTimeout(() => reject(new Error('بازکردن عکس طول کشید؛ عکس دیگری بگیرید.')), 15000);
+      image.onload = () => { clearTimeout(timeout); resolve(image); };
+      image.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error('قالب عکس در این مرورگر باز نمی‌شود؛ عکس JPEG یا PNG انتخاب کنید.'));
       };
-      img.onerror = () => resolve(null);
-      const result = event.target?.result;
-      if (typeof result !== 'string') {
-        resolve(null);
-        return;
-      }
-      img.src = result;
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
+      image.src = url;
+    });
+    for (const limit of [1600, 2800]) {
+      if (cancelled()) return null;
+      drawBarcodeImage(img, canvas, limit);
+      const result = await scanImageData(canvas, cancelled);
+      if (result) return result;
+      if (Math.max(img.naturalWidth, img.naturalHeight) <= limit) break;
+    }
+    return null;
+  } finally {
+    canvas.width = 1;
+    canvas.height = 1;
+    URL.revokeObjectURL(url);
+  }
 }

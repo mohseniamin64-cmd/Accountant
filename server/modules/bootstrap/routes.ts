@@ -19,7 +19,9 @@ function companyProfile(row: CompanyRow): CompanyProfile {
     id: row.id,
     nameFa: row.name_fa,
     nameEn: row.name_en,
-    logoUrl: row.logo_path ? `/api/files/${row.logo_path}` : null,
+    logoUrl: row.logo_path
+      ? `/api/company-logo?file=${encodeURIComponent(row.logo_path)}`
+      : null,
     baseCurrency: row.base_currency,
     defaultAmountUnit: row.default_amount_unit,
     timezone: row.timezone,

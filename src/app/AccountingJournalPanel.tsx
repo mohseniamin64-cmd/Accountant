@@ -2,7 +2,6 @@ import {
   CirclePlus,
   Eye,
   Pencil,
-  RefreshCw,
   RotateCcw,
   Search,
   Send,
@@ -318,14 +317,6 @@ export function AccountingJournalPanel({
           <h2>اسناد حسابداری</h2>
         </div>
         <div className="heading-actions">
-          <button
-            className="button secondary"
-            disabled={pending}
-            onClick={() => void loadRecords()}
-            type="button"
-          >
-            <RefreshCw aria-hidden /> بازخوانی
-          </button>
           {canCreate ? (
             <button className="button primary" onClick={startNew} type="button">
               <CirclePlus aria-hidden /> سند جدید

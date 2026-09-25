@@ -204,6 +204,119 @@
   margin-top: 26px;
 }
 
+/* مرکزچین اختصاصی میز مدیریت شعبه و انبار */
+.organization-page .form-message,
+.organization-page .field > span,
+.organization-page .field-help,
+.organization-page .boolean-field,
+.organization-page .boolean-field span,
+.organization-page .master-table th,
+.organization-page .master-table td,
+.organization-page .master-mobile-card,
+.organization-page .master-mobile-card dt,
+.organization-page .master-mobile-card dd {
+  text-align: center;
+}
+
+.organization-page .field > input,
+.organization-page .field > select,
+.organization-page .field > textarea {
+  text-align: center;
+}
+
+.organization-page .boolean-field {
+  justify-content: center;
+}
+
+.organization-page .master-mobile-card header {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.organization-page .master-mobile-card dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.organization-page .organization-code {
+  direction: ltr;
+  unicode-bidi: plaintext;
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* مرکزچین اختصاصی کادرهای صفحه کالا، قطعه و خدمت */
+.product-page .master-data-toolbar .field > span,
+.product-page .master-form .field > span,
+.product-page .master-form .field-help,
+.product-page .master-form .boolean-field,
+.product-page .master-form .boolean-field span,
+.product-page .master-table th,
+.product-page .master-table td {
+  text-align: center;
+}
+
+.product-page .master-data-toolbar .field > input,
+.product-page .master-data-toolbar .field > select,
+.product-page .master-form .field > input,
+.product-page .master-form .field > select,
+.product-page .master-form .field > textarea {
+  direction: rtl;
+  text-align: center !important;
+  unicode-bidi: plaintext;
+}
+
+.product-page .master-data-toolbar .field > select,
+.product-page .master-form .field > select {
+  text-align-last: center;
+}
+
+.product-page .master-search-input > svg {
+  right: auto;
+  left: 13px;
+}
+
+.product-page .master-search-input > input {
+  padding-right: 14px;
+  padding-left: 42px;
+  direction: rtl;
+  text-align: center !important;
+  unicode-bidi: plaintext;
+}
+
+/* مرکزچین اختصاصی نوار جست‌وجو و وضعیت طرف‌حساب‌ها */
+.parties-page .master-data-toolbar .field > span {
+  text-align: center;
+}
+
+.parties-page .master-data-toolbar .field > input,
+.parties-page .master-data-toolbar .field > select {
+  direction: rtl;
+  text-align: center !important;
+  unicode-bidi: plaintext;
+}
+
+.parties-page .master-data-toolbar .field > select {
+  text-align-last: center;
+}
+
+.parties-page .master-search-input > svg {
+  right: auto;
+  left: 13px;
+}
+
+.parties-page .master-search-input > input {
+  padding-right: 14px;
+  padding-left: 42px;
+  direction: rtl;
+  text-align: center !important;
+  unicode-bidi: plaintext;
+}
+
+.product-page .master-form .master-form-actions,
+.product-page .master-form .boolean-field {
+  justify-content: center;
+}
+
 .warranty-list {
   display: grid;
   gap: 10px;

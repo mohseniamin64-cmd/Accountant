@@ -1,21 +1,29 @@
 import {
+  ClipboardList,
+  Clock3,
   CloudOff,
   Copy,
   DatabaseBackup,
   HardDrive,
+  ImageUp,
   MessageSquareText,
-  RefreshCw,
+  Printer,
+  ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
 import {FormEvent, useCallback, useEffect, useState} from 'react';
+import {Link} from 'react-router-dom';
 import {api, errorMessage, postJson} from './api.js';
 import {ContextHelpButton} from './ContextHelpButton.js';
+import {BrandLogo} from './BrandLogo.js';
 import {appHelp} from './help-content.js';
 import './settings.css';
 
 interface SettingsPageProps {
   companyName: string;
+  companyLogoUrl: string | null;
   permissions: readonly string[];
+  onCompanyChanged: () => Promise<void>;
 }
 
 interface BackupPolicy {
@@ -29,6 +37,11 @@ interface BackupPolicy {
 interface BackupConfiguration {
   localDirectory: string;
   encryptionConfigured: boolean;
+  installation: {
+    serial: string;
+    appVersion: string;
+    filenamePattern: string;
+  };
   externalDrive: {path?: string | null};
   policy: Partial<BackupPolicy>;
   googleDrive: {
@@ -71,6 +84,20 @@ interface SmsMessage {
   queuedAt: string;
   sentAt: string | null;
   deliveredAt: string | null;
+}
+
+interface ServiceOutputSettings {
+  intakePrintEnabled: boolean;
+  paperSize: 'A4' | '80mm';
+  printReceipt: boolean;
+  printDeviceLabel: boolean;
+}
+
+interface SessionSecuritySettings {
+  idleMinutes: number;
+  loginLockEnabled: boolean;
+  maxFailedLoginAttempts: number;
+  loginLockMinutes: number;
 }
 
 const backupStatus: Record<string, string> = {
@@ -147,8 +174,11 @@ function Feedback({
 
 export function SettingsPage({
   companyName,
+  companyLogoUrl,
   permissions,
+  onCompanyChanged,
 }: SettingsPageProps) {
+  const canManageCompany = permissions.includes('system.settings.manage');
   const canBackup = permissions.includes('backup.manage');
   const canSms = permissions.includes('sms.manage');
   const [backupConfiguration, setBackupConfiguration] =
@@ -161,10 +191,19 @@ export function SettingsPage({
     onServerShutdown: false,
   });
   const [externalDrivePath, setExternalDrivePath] = useState('');
+  const [installationSerial, setInstallationSerial] = useState('');
   const [backupRuns, setBackupRuns] = useState<readonly BackupRun[]>([]);
   const [smsConfiguration, setSmsConfiguration] =
     useState<SmsConfiguration | null>(null);
   const [smsMessages, setSmsMessages] = useState<readonly SmsMessage[]>([]);
+  const [serviceOutput, setServiceOutput] = useState<ServiceOutputSettings | null>(null);
+  const [sessionSecurity, setSessionSecurity] = useState<SessionSecuritySettings | null>(null);
+  const [serviceOutputError, setServiceOutputError] = useState<string | null>(null);
+  const [serviceOutputSuccess, setServiceOutputSuccess] = useState<string | null>(null);
+  const [sessionSecurityError, setSessionSecurityError] = useState<string | null>(null);
+  const [sessionSecuritySuccess, setSessionSecuritySuccess] = useState<string | null>(null);
+  const [loginLockError, setLoginLockError] = useState<string | null>(null);
+  const [loginLockSuccess, setLoginLockSuccess] = useState<string | null>(null);
   const [deviceLabel, setDeviceLabel] = useState('\u06af\u0648\u0634\u06cc \u067e\u06cc\u0627\u0645\u06a9 \u0634\u0631\u06a9\u062a');
   const [gatewayToken, setGatewayToken] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -172,6 +211,10 @@ export function SettingsPage({
   const [backupSuccess, setBackupSuccess] = useState<string | null>(null);
   const [smsError, setSmsError] = useState<string | null>(null);
   const [smsSuccess, setSmsSuccess] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoSuccess, setLogoSuccess] = useState<string | null>(null);
 
   const loadBackup = useCallback(async () => {
     if (!canBackup) return;
@@ -181,6 +224,7 @@ export function SettingsPage({
     ]);
     setBackupConfiguration(configuration);
     setExternalDrivePath(configuration.externalDrive.path ?? '');
+    setInstallationSerial(configuration.installation.serial);
     setPolicy({
       scheduled: configuration.policy.scheduled ?? false,
       scheduleTime: configuration.policy.scheduleTime ?? '18:00',
@@ -204,12 +248,25 @@ export function SettingsPage({
     setSmsMessages(messages);
   }, [canSms]);
 
+  const loadServiceOutput = useCallback(async () => {
+    if (!canManageCompany) return;
+    setServiceOutput(
+      await api<ServiceOutputSettings>('/api/settings/service-output'),
+    );
+  }, [canManageCompany]);
+
+  const loadSessionSecurity = useCallback(async () => {
+    if (!canManageCompany) return;
+    setSessionSecurity(await api<SessionSecuritySettings>('/api/settings/session-security'));
+  }, [canManageCompany]);
+
   const reloadAll = useCallback(async () => {
     const jobs: Promise<void>[] = [];
     if (canBackup) jobs.push(loadBackup());
     if (canSms) jobs.push(loadSms());
+    if (canManageCompany) jobs.push(loadServiceOutput(), loadSessionSecurity());
     await Promise.all(jobs);
-  }, [canBackup, canSms, loadBackup, loadSms]);
+  }, [canBackup, canManageCompany, canSms, loadBackup, loadServiceOutput, loadSessionSecurity, loadSms]);
 
   useEffect(() => {
     setPendingAction('initial-load');
@@ -218,9 +275,10 @@ export function SettingsPage({
         const message = errorMessage(caught);
         if (canBackup) setBackupError(message);
         if (canSms) setSmsError(message);
+        if (canManageCompany) setServiceOutputError(message);
       })
       .finally(() => setPendingAction(null));
-  }, [canBackup, canSms, reloadAll]);
+  }, [canBackup, canManageCompany, canSms, reloadAll]);
 
   async function saveBackupConfiguration(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -233,6 +291,7 @@ export function SettingsPage({
         '/api/backups/configuration',
         {
           externalDrivePath: externalDrivePath.trim() || null,
+          installationSerial: installationSerial.trim().toUpperCase(),
           ...policy,
         },
         'PUT',
@@ -309,6 +368,69 @@ export function SettingsPage({
     }
   }
 
+  async function saveServiceOutput(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!serviceOutput || pendingAction) return;
+    setPendingAction('service-output');
+    setServiceOutputError(null);
+    setServiceOutputSuccess(null);
+    try {
+      const saved = await postJson<ServiceOutputSettings>(
+        '/api/settings/service-output',
+        serviceOutput,
+        'PUT',
+      );
+      setServiceOutput(saved);
+      setServiceOutputSuccess('تنظیمات چاپ پذیرش و برچسب ذخیره شد.');
+    } catch (caught) {
+      setServiceOutputError(errorMessage(caught));
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function saveSessionSecurity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!sessionSecurity || pendingAction) return;
+    setPendingAction('session-security');
+    setSessionSecurityError(null);
+    setSessionSecuritySuccess(null);
+    try {
+      const saved = await postJson<SessionSecuritySettings>(
+        '/api/settings/session-security',
+        sessionSecurity,
+        'PUT',
+      );
+      setSessionSecurity(saved);
+      setSessionSecuritySuccess('مدت قفل خودکار نشست ذخیره شد و برای نشست‌های فعال اعمال شد.');
+    } catch (caught) {
+      setSessionSecurityError(errorMessage(caught));
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function saveLoginLockSettings(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!sessionSecurity || pendingAction) return;
+    setPendingAction('login-lock');
+    setLoginLockError(null);
+    setLoginLockSuccess(null);
+    try {
+      const saved = await postJson<SessionSecuritySettings>(
+        '/api/settings/session-security',
+        sessionSecurity,
+        'PUT',
+      );
+      setSessionSecurity(saved);
+      setLoginLockSuccess('تنظیمات قفل موقت ورود با موفقیت ذخیره شد.');
+    } catch (caught) {
+      setLoginLockError(errorMessage(caught));
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   async function copyToken() {
     if (!gatewayToken) return;
     setSmsError(null);
@@ -320,6 +442,30 @@ export function SettingsPage({
     }
   }
 
+  async function uploadCompanyLogo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!logoFile || uploadingLogo) return;
+    setUploadingLogo(true);
+    setLogoError(null);
+    setLogoSuccess(null);
+    try {
+      const payload = new FormData();
+      payload.set('logo', logoFile);
+      await api<{logoUrl: string}>('/api/settings/company/logo', {
+        method: 'POST',
+        body: payload,
+      });
+      await onCompanyChanged();
+      setLogoFile(null);
+      event.currentTarget.reset();
+      setLogoSuccess('لوگوی شرکت با موفقیت ذخیره و در سامانه به‌روزرسانی شد.');
+    } catch (caught) {
+      setLogoError(errorMessage(caught));
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
   return (
     <section className="content-page">
       <header className="page-heading compact">
@@ -328,23 +474,6 @@ export function SettingsPage({
           <p>{'\u0634\u0631\u06a9\u062a\u060c \u06a9\u0627\u0631\u0628\u0631\u0627\u0646\u060c \u0632\u06cc\u0631\u0633\u0627\u062e\u062a \u0648 \u0627\u062a\u0635\u0627\u0644\u200c\u0647\u0627'}</p>
           <h1>{'\u062a\u0646\u0638\u06cc\u0645\u0627\u062a'}</h1>
         </div>
-        <button
-          className="button secondary"
-          type="button"
-          disabled={Boolean(pendingAction)}
-          onClick={() => {
-            setBackupError(null);
-            setSmsError(null);
-            void reloadAll().catch((caught) => {
-              const message = errorMessage(caught);
-              if (canBackup) setBackupError(message);
-              if (canSms) setSmsError(message);
-            });
-          }}
-        >
-          <RefreshCw aria-hidden />
-          {'\u0628\u0627\u0632\u062e\u0648\u0627\u0646\u06cc'}
-        </button>
       </header>
 
       <div className="info-card settings-company-card">
@@ -353,6 +482,256 @@ export function SettingsPage({
           <strong>{companyName}</strong>
           <p>{'\u0648\u0627\u062d\u062f \u067e\u0627\u06cc\u0647 \u0630\u062e\u06cc\u0631\u0647\u200c\u0633\u0627\u0632\u06cc: \u0631\u06cc\u0627\u0644 \u00b7 \u0645\u0646\u0637\u0642\u0647 \u0632\u0645\u0627\u0646\u06cc: \u062a\u0647\u0631\u0627\u0646 \u00b7 \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0647\u0631 \u06a9\u0627\u0631\u0628\u0631 \u0647\u0646\u06af\u0627\u0645 \u0646\u0645\u0627\u06cc\u0634 \u062a\u0628\u062f\u06cc\u0644 \u0645\u06cc\u200c\u0634\u0648\u062f.'}</p>
         </div>
+      </div>
+
+      <div className="settings-compact-grid">
+
+      {canManageCompany ? (
+        <section className="settings-section settings-section--compact">
+          <div className="section-heading settings-section-heading">
+            <ContextHelpButton help={appHelp.settings} />
+            <div>
+              <p>کنترل نشست فعال و بازگشت امن پس از بی‌کاری</p>
+              <h2>قفل خودکار نشست</h2>
+            </div>
+            <Clock3 aria-hidden />
+          </div>
+          <Feedback error={sessionSecurityError} success={sessionSecuritySuccess} />
+          {sessionSecurity ? (
+            <form className="form-card" onSubmit={(event) => void saveSessionSecurity(event)}>
+              <div className="form-grid">
+                <label className="field">
+                  <span>مدت بی‌کاری پیش از قفل‌شدن (دقیقه)</span>
+                  <input
+                    inputMode="numeric"
+                    max={90}
+                    min={1}
+                    onChange={(event) => setSessionSecurity((current) => current ? ({...current, idleMinutes: Number(event.target.value)}) : current)}
+                    required
+                    type="number"
+                    value={sessionSecurity.idleMinutes}
+                  />
+                  <small className="field-help">
+                    مقدار استاندارد ۳۰ دقیقه است. برای آزمون می‌توانید موقتاً ۱ دقیقه انتخاب کنید و پس از پایان تست آن را به ۳۰ برگردانید.
+                  </small>
+                </label>
+              </div>
+              <div className="form-actions">
+                <button className="button primary" disabled={Boolean(pendingAction)} type="submit">
+                  <Clock3 aria-hidden />
+                  {pendingAction === 'session-security' ? 'در حال ذخیره…' : 'ذخیره زمان قفل خودکار'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="empty-state card">در حال دریافت تنظیمات امنیت نشست…</div>
+          )}
+        </section>
+      ) : null}
+
+      {canManageCompany ? (
+        <section className="settings-section settings-section--compact login-lock-section">
+          <div className="section-heading settings-section-heading">
+            <ContextHelpButton help={appHelp.settings} />
+            <div>
+              <p>پس از چند ورود ناموفق، دسترسی ورود برای مدت کوتاه متوقف می‌شود</p>
+              <h2>قفل موقت ورود</h2>
+            </div>
+            <ShieldAlert aria-hidden />
+          </div>
+          <Feedback error={loginLockError} success={loginLockSuccess} />
+          {sessionSecurity ? (
+            <form className="form-card security-lock-form" onSubmit={(event) => void saveLoginLockSettings(event)}>
+              <div className="security-lock-status">
+                <label className="toggle-row">
+                  <input
+                    checked={sessionSecurity.loginLockEnabled}
+                    onChange={(event) => setSessionSecurity((current) => current ? ({...current, loginLockEnabled: event.target.checked}) : current)}
+                    type="checkbox"
+                  />
+                  <span>قفل موقت ورود فعال باشد</span>
+                </label>
+                <p>در حالت غیرفعال، تلاش‌های ناموفق ثبت می‌شوند اما قفل خودکار جدید ایجاد نمی‌شود.</p>
+              </div>
+              <div className="form-grid">
+                <label className="field">
+                  <span>تعداد تلاش ناموفق مجاز</span>
+                  <input
+                    inputMode="numeric"
+                    max={20}
+                    min={1}
+                    onChange={(event) => setSessionSecurity((current) => current ? ({...current, maxFailedLoginAttempts: Number(event.target.value)}) : current)}
+                    required
+                    type="number"
+                    value={sessionSecurity.maxFailedLoginAttempts}
+                  />
+                  <small className="field-help">پیشنهاد پیش‌فرض: ۵ تلاش ناموفق.</small>
+                </label>
+                <label className="field">
+                  <span>مدت قفل موقت ورود (دقیقه)</span>
+                  <input
+                    inputMode="numeric"
+                    max={1440}
+                    min={1}
+                    onChange={(event) => setSessionSecurity((current) => current ? ({...current, loginLockMinutes: Number(event.target.value)}) : current)}
+                    required
+                    type="number"
+                    value={sessionSecurity.loginLockMinutes}
+                  />
+                  <small className="field-help">پیشنهاد پیش‌فرض: ۱۵ دقیقه.</small>
+                </label>
+              </div>
+              <div className="form-actions">
+                <button className="button primary" disabled={Boolean(pendingAction)} type="submit">
+                  <ShieldAlert aria-hidden />
+                  {pendingAction === 'login-lock' ? 'در حال ذخیره…' : 'ذخیره تنظیمات قفل ورود'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="empty-state card">در حال دریافت تنظیمات قفل ورود…</div>
+          )}
+          {permissions.includes('system.audit.view') ? (
+            <Link className="security-audit-card" to="/audit">
+              <ClipboardList aria-hidden />
+              <span>
+                <strong>گزارش لاگ امنیتی</strong>
+                <small>سابقه ورود، تلاش ناموفق، قفل، رفع قفل و خروج را جداگانه ببینید.</small>
+              </span>
+              <span className="security-audit-card__action">مشاهده گزارش</span>
+            </Link>
+          ) : null}
+        </section>
+      ) : null}
+      {canManageCompany ? (
+        <section className="settings-section settings-section--compact company-logo-section">
+          <div className="section-heading settings-section-heading">
+            <ContextHelpButton help={appHelp.settings} />
+            <div>
+              <p>نمایش در صفحه ورود و هدر سامانه</p>
+              <h2>لوگوی شرکت</h2>
+            </div>
+            <ImageUp aria-hidden />
+          </div>
+          <Feedback error={logoError} success={logoSuccess} />
+          <form className="form-card company-logo-form" onSubmit={uploadCompanyLogo}>
+            <div className="company-logo-preview">
+              <BrandLogo variant="mobile" logoUrl={companyLogoUrl} />
+              <div>
+                <strong>لوگوی فعال</strong>
+                <p>با ذخیره لوگوی جدید، لوگوی قبلی حفظ می‌شود و فقط لوگوی فعال جایگزین خواهد شد.</p>
+              </div>
+            </div>
+            <label className="field">
+              <span>انتخاب فایل لوگو</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                required
+              />
+              <small className="field-help">
+                فقط PNG، JPEG یا WebP با حداکثر حجم ۲ مگابایت.
+              </small>
+            </label>
+            <div className="form-actions">
+              <button className="button primary" type="submit" disabled={!logoFile || uploadingLogo}>
+                <ImageUp aria-hidden />
+                {uploadingLogo ? 'در حال ذخیره لوگو…' : 'ذخیره لوگوی جدید'}
+              </button>
+            </div>
+          </form>
+        </section>
+      ) : null}
+
+      {canManageCompany ? (
+        <section className="settings-section settings-section--compact">
+          <div className="section-heading settings-section-heading">
+            <ContextHelpButton help={appHelp.settings} />
+            <div>
+              <p>خروجی خودکار پس از ثبت واقعی پذیرش</p>
+              <h2>چاپ رسید و برچسب خدمات</h2>
+            </div>
+            <Printer aria-hidden />
+          </div>
+          <div className="service-output-content">
+            <Feedback error={serviceOutputError} success={serviceOutputSuccess} />
+            {serviceOutput ? (
+              <form className="form-card service-output-form" onSubmit={(event) => void saveServiceOutput(event)}>
+              <div className="form-card-heading">
+                <h2>{serviceOutput.intakePrintEnabled ? 'چاپ پذیرش فعال است' : 'چاپ پذیرش غیرفعال است'}</h2>
+                <p>
+                  مرورگر پس از پذیرش پنجره چاپ را باز می‌کند. اگر چاپ غیرفعال باشد،
+                  پیامک پذیرش در صورت فعال‌بودن درگاه برای مشتری صف می‌شود.
+                </p>
+              </div>
+              <div className="form-grid">
+                <label className="toggle-row">
+                  <input
+                    checked={serviceOutput.intakePrintEnabled}
+                    onChange={(event) => setServiceOutput((current) => current ? ({
+                      ...current,
+                      intakePrintEnabled: event.target.checked,
+                    }) : current)}
+                    type="checkbox"
+                  />
+                  <span>بازکردن خودکار پنجره چاپ بعد از پذیرش</span>
+                </label>
+                <label className="field">
+                  <span>اندازه کاغذ</span>
+                  <select
+                    disabled={!serviceOutput.intakePrintEnabled}
+                    onChange={(event) => setServiceOutput((current) => current ? ({
+                      ...current,
+                      paperSize: event.target.value as 'A4' | '80mm',
+                    }) : current)}
+                    value={serviceOutput.paperSize}
+                  >
+                    <option value="A4">A4 برای HP 1005</option>
+                    <option value="80mm">حرارتی ۸۰ میلی‌متری</option>
+                  </select>
+                </label>
+                <div className="toggle-list full">
+                  <label className="toggle-row">
+                    <input
+                      checked={serviceOutput.printReceipt}
+                      disabled={!serviceOutput.intakePrintEnabled}
+                      onChange={(event) => setServiceOutput((current) => current ? ({
+                        ...current,
+                        printReceipt: event.target.checked,
+                      }) : current)}
+                      type="checkbox"
+                    />
+                    <span>چاپ رسید پذیرش مشتری</span>
+                  </label>
+                  <label className="toggle-row">
+                    <input
+                      checked={serviceOutput.printDeviceLabel}
+                      disabled={!serviceOutput.intakePrintEnabled}
+                      onChange={(event) => setServiceOutput((current) => current ? ({
+                        ...current,
+                        printDeviceLabel: event.target.checked,
+                      }) : current)}
+                      type="checkbox"
+                    />
+                    <span>چاپ برچسب دستگاه</span>
+                  </label>
+                </div>
+              </div>
+              <div className="form-actions">
+                <button className="button primary" disabled={Boolean(pendingAction)} type="submit">
+                  <Printer aria-hidden />
+                  {pendingAction === 'service-output' ? 'در حال ذخیره…' : 'ذخیره تنظیمات چاپ'}
+                </button>
+              </div>
+              </form>
+            ) : (
+              <div className="empty-state card">در حال دریافت تنظیمات چاپ…</div>
+            )}
+          </div>
+        </section>
+      ) : null}
+
       </div>
 
       {canBackup ? (
@@ -408,13 +787,39 @@ export function SettingsPage({
                 </div>
               ) : null}
 
-              <form className="form-card" onSubmit={saveBackupConfiguration}>
+              <form className="form-card backup-policy-form" onSubmit={saveBackupConfiguration}>
                 <div className="form-card-heading">
                   <ContextHelpButton help={appHelp.backupSchedule} />
                   <h2>{'\u0627\u0644\u06af\u0648\u06cc \u0627\u062c\u0631\u0627\u06cc \u062e\u0648\u062f\u06a9\u0627\u0631'}</h2>
                   <p>{'\u0647\u0645\u0647 \u0633\u0627\u0639\u062a\u200c\u0647\u0627 \u0628\u0631\u0627\u0633\u0627\u0633 \u0645\u0646\u0637\u0642\u0647 \u0632\u0645\u0627\u0646\u06cc \u062a\u0647\u0631\u0627\u0646 \u0627\u062c\u0631\u0627 \u0645\u06cc\u200c\u0634\u0648\u0646\u062f.'}</p>
                 </div>
+                <div className="backup-identity-summary">
+                  <div>
+                    <span>نسخه برنامه</span>
+                    <strong dir="ltr">v{backupConfiguration.installation.appVersion}</strong>
+                  </div>
+                  <div>
+                    <span>شناسه مستقل این نصب</span>
+                    <strong dir="ltr">{backupConfiguration.installation.serial}</strong>
+                  </div>
+                  <small>{backupConfiguration.installation.filenamePattern}</small>
+                </div>
                 <div className="form-grid">
+                  <label className="field">
+                    <span>شماره سریال نصب *</span>
+                    <input
+                      dir="ltr"
+                      value={installationSerial}
+                      minLength={6}
+                      maxLength={48}
+                      pattern="[A-Za-z0-9][A-Za-z0-9-]{5,47}"
+                      required
+                      onChange={(event) => setInstallationSerial(event.target.value.toUpperCase())}
+                    />
+                    <small className="field-help">
+                      برای هر نصب متفاوت باشد؛ فقط حروف انگلیسی، عدد و خط تیره مجاز است.
+                    </small>
+                  </label>
                   <label className="field full">
                     <span>{'\u0645\u0633\u06cc\u0631 \u062d\u0627\u0641\u0638\u0647 \u062e\u0627\u0631\u062c\u06cc \u0631\u0648\u06cc \u06a9\u0627\u0645\u067e\u06cc\u0648\u062a\u0631 \u0633\u0631\u0648\u0631'}</span>
                     <input
@@ -593,7 +998,7 @@ export function SettingsPage({
           {smsConfiguration ? (
             <>
               <form
-                className="form-card"
+                className="form-card sms-configuration-form"
                 onSubmit={(event) => {
                   event.preventDefault();
                   void updateSms(!smsConfiguration.isEnabled);

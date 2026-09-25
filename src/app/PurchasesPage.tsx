@@ -2,7 +2,6 @@ import {
   CirclePlus,
   Eye,
   Plus,
-  RefreshCw,
   RotateCcw,
   Save,
   Search,
@@ -518,7 +517,7 @@ export function PurchasesPage({
   }
 
   return (
-    <section className="content-page purchases-page">
+    <section className="content-page purchases-page purchase-workspace">
       <header className="page-heading compact">
         <ContextHelpButton help={appHelp.purchases} />
         <div>
@@ -526,14 +525,6 @@ export function PurchasesPage({
           <h1>{'\u0641\u0627\u06a9\u062a\u0648\u0631\u0647\u0627\u06cc \u062e\u0631\u06cc\u062f'}</h1>
         </div>
         <div className="heading-actions">
-          <button
-            className="button secondary"
-            disabled={pending}
-            onClick={() => setReloadVersion((current) => current + 1)}
-            type="button"
-          >
-            <RefreshCw aria-hidden />{'\u0628\u0627\u0632\u062e\u0648\u0627\u0646\u06cc'}
-          </button>
           {canCreate ? (
             <button className="button primary" onClick={startNewInvoice} type="button">
               <CirclePlus aria-hidden />{'\u0641\u0627\u06a9\u062a\u0648\u0631 \u062e\u0631\u06cc\u062f \u062c\u062f\u06cc\u062f'}
@@ -624,27 +615,36 @@ export function PurchasesPage({
 
           <div className="form-section-heading purchase-lines-heading">
             <ContextHelpButton help={appHelp.purchaseLines} />
-            <h2>{'\u0631\u062f\u06cc\u0641\u200c\u0647\u0627\u06cc \u0641\u0627\u06a9\u062a\u0648\u0631 \u062e\u0631\u06cc\u062f'}</h2>
+            <h2>اقلام فاکتور خرید</h2>
             <button className="button secondary" onClick={addLine} type="button">
               <Plus aria-hidden />{'\u0627\u0641\u0632\u0648\u062f\u0646 \u0631\u062f\u06cc\u0641'}
             </button>
           </div>
 
-          <div className="purchase-lines">
-            {draft.lines.map((line, index) => (
-              <PurchaseLineEditor
-                amountUnit={amountUnit}
-                canRemove={draft.lines.length > 1}
-                index={index}
-                key={line.key}
-                line={line}
-                onChange={(changes) => changeLine(line.key, changes)}
-                onProductChange={(productId) => changeLineProduct(line.key, productId)}
-                onRemove={() => removeLine(line.key)}
-                products={options.products}
-                warehouses={branchWarehouses}
-              />
-            ))}
+          <div className="purchase-draft-table table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>ردیف</th><th>کد کالا</th><th>نام کالا یا خدمت</th><th>انبار</th><th>تعداد</th><th>واحد</th><th>فی</th><th>تخفیف</th><th>مالیات</th><th>جمع</th><th>حذف</th>
+                </tr>
+              </thead>
+              <tbody>
+                {draft.lines.map((line, index) => (
+                  <PurchaseLineEditor
+                    amountUnit={amountUnit}
+                    canRemove={draft.lines.length > 1}
+                    index={index}
+                    key={line.key}
+                    line={line}
+                    onChange={(changes) => changeLine(line.key, changes)}
+                    onProductChange={(productId) => changeLineProduct(line.key, productId)}
+                    onRemove={() => removeLine(line.key)}
+                    products={options.products}
+                    warehouses={branchWarehouses}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <div className="purchase-form-total">

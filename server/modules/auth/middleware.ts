@@ -2,10 +2,10 @@ import type {RequestHandler} from 'express';
 import type {QueryResultRow} from 'pg';
 import type {PermissionCode} from '../../../shared/permissions.js';
 import {AppError, asyncRoute} from '../../common/errors.js';
-import {config} from '../../config.js';
 import {query} from '../../db/pool.js';
 import {hashToken, parseCookies} from '../../common/security.js';
 import {clearSessionCookie, SESSION_COOKIE} from './session-cookie.js';
+import {loadSessionIdleMs} from './session-policy.js';
 import {loadAuthenticatedUser} from './user.js';
 
 interface SessionRow extends QueryResultRow {
@@ -30,7 +30,9 @@ export const populateAuthentication = asyncRoute(
         WHERE session.token_hash = $1
           AND session.expires_at > now()
           AND session.idle_expires_at > now()
+          AND session.revoked_at IS NULL
           AND "user".is_active = true
+          AND "user".account_status = 'active'
           AND company.is_active = true
       `,
       [hashToken(token)],
@@ -52,6 +54,7 @@ export const populateAuthentication = asyncRoute(
 
     request.auth = user;
     request.sessionId = session.id;
+    const sessionIdleMs = await loadSessionIdleMs(user.companyId);
 
     await query(
       `
@@ -60,9 +63,10 @@ export const populateAuthentication = asyncRoute(
           last_seen_at = now(),
           idle_expires_at = now() + ($2 * interval '1 millisecond')
         WHERE id = $1
+          AND revoked_at IS NULL
           AND last_seen_at < now() - interval '1 minute'
       `,
-      [session.id, config.sessionIdleMs],
+      [session.id, sessionIdleMs],
     );
 
     next();

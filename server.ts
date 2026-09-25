@@ -689,7 +689,7 @@ app.post("/api/auth/login", (req, res) => {
     const count = (attempt?.count || 0) + 1;
     loginAttempts.set(key, { count, lockedUntil: count >= MAX_LOGIN_ATTEMPTS ? Date.now() + LOGIN_WINDOW_MS : 0 });
     audit(req, "LOGIN_FAILED", "auth", { username });
-    return res.status(401).json({ error: "نام کاربری یا رمز عبور صحیح نیست." });
+    return res.status(401).json({ error: "نام کاربری یا رمز عبور صحیح نیست" });
   }
   loginAttempts.delete(key);
   const token = crypto.randomBytes(32).toString("hex");

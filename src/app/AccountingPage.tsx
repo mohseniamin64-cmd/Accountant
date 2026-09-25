@@ -2,7 +2,6 @@ import {
   BookOpenText,
   Calculator,
   CalendarRange,
-  RefreshCw,
 } from 'lucide-react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import type {AmountUnit} from '../../shared/contracts.js';
@@ -93,17 +92,6 @@ export function AccountingPage({
         <div>
           <p>ثبت دوبل، سال مالی و گزارش‌های متکی بر داده واقعی</p>
           <h1>{initialTab === 'reports' ? 'گزارش‌های حسابداری' : 'حسابداری'}</h1>
-        </div>
-        <div className="heading-actions">
-          <button
-            className="button secondary"
-            disabled={pending}
-            onClick={() => void loadOptions()}
-            type="button"
-          >
-            <RefreshCw aria-hidden />
-            {pending ? 'در حال بازخوانی…' : 'بازخوانی'}
-          </button>
         </div>
       </header>
 

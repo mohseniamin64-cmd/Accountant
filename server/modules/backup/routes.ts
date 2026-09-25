@@ -12,7 +12,11 @@ import {
   requireAuthentication,
   requirePermissions,
 } from '../auth/middleware.js';
-import {runBackup, verifyBackup} from './service.js';
+import {
+  getBackupInstallationIdentity,
+  runBackup,
+  verifyBackup,
+} from './service.js';
 
 export const backupRouter = Router();
 backupRouter.use(
@@ -24,7 +28,7 @@ backupRouter.get(
   '/configuration',
   asyncRoute(async (request, response) => {
     const actor = currentUser(request);
-    const [settings, googleDrive] = await Promise.all([
+    const [settings, googleDrive, installation] = await Promise.all([
       query<{setting_key: string; setting_value: unknown}>(
         `
           SELECT setting_key, setting_value
@@ -50,6 +54,10 @@ backupRouter.get(
         `,
         [actor.companyId],
       ),
+      getBackupInstallationIdentity({
+        companyId: actor.companyId,
+        userId: actor.id,
+      }),
     ]);
     const values = new Map(
       settings.rows.map((row) => [row.setting_key, row.setting_value]),
@@ -58,6 +66,7 @@ backupRouter.get(
       data: {
         localDirectory: config.backupsDir,
         encryptionConfigured: Boolean(config.backupEncryptionKey),
+        installation,
         externalDrive: values.get('backup.external_drive') ?? {path: null},
         policy: values.get('backup.policy') ?? {
           scheduled: false,
@@ -83,6 +92,11 @@ backupRouter.put(
     const input = z
       .object({
         externalDrivePath: z.string().trim().max(1000).nullable(),
+        installationSerial: z
+          .string()
+          .trim()
+          .toUpperCase()
+          .regex(/^[A-Z0-9][A-Z0-9-]{5,47}$/),
         scheduled: z.boolean(),
         scheduleTime: z
           .string()
@@ -120,6 +134,10 @@ backupRouter.put(
             onDriveConnected: input.onDriveConnected,
             onServerShutdown: input.onServerShutdown,
           },
+        ],
+        [
+          'backup.installation_identity',
+          {serial: input.installationSerial},
         ],
       ] as const;
       for (const [key, value] of entries) {

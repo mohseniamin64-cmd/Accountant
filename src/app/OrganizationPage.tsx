@@ -132,7 +132,6 @@ export function OrganizationPage({permissions}: OrganizationPageProps) {
     setSuccess(null);
     try {
       const payload = {
-        code: String(form.get('code') ?? '').trim(),
         name: String(form.get('name') ?? '').trim(),
         phone: nullableText(form.get('phone')),
         address: nullableText(form.get('address')),
@@ -168,7 +167,6 @@ export function OrganizationPage({permissions}: OrganizationPageProps) {
     try {
       const payload = {
         branchId: String(form.get('branchId') ?? ''),
-        code: String(form.get('code') ?? '').trim(),
         name: String(form.get('name') ?? '').trim(),
         warehouseType: String(form.get('warehouseType')) as WarehouseType,
         allowNegative: form.has('allowNegative'),
@@ -240,12 +238,11 @@ export function OrganizationPage({permissions}: OrganizationPageProps) {
   }
 
   return (
-    <section className="content-page">
+    <section className="content-page organization-page business-forms">
       <MasterDataHeader
         title={text.organizationTitle}
         description={text.organizationDescription}
         help={masterDataHelp.organization}
-        action={<button className="button secondary" disabled={pending} onClick={() => void load()} type="button">{text.refresh}</button>}
       />
       <ActionFeedback error={error} success={success} />
 
@@ -256,7 +253,6 @@ export function OrganizationPage({permissions}: OrganizationPageProps) {
             <div><p>{text.branches}</p><h2>{editingBranch ? text.editBranch : text.newBranch}</h2></div>
           </div>
           <div className="form-grid">
-            <label className="field"><span>{text.code} *</span><input name="code" defaultValue={editingBranch?.code ?? ''} maxLength={40} required /></label>
             <label className="field"><span>{text.name} *</span><input name="name" defaultValue={editingBranch?.name ?? ''} maxLength={160} required /></label>
             <label className="field"><span>{text.phone}</span><input name="phone" defaultValue={editingBranch?.phone ?? ''} maxLength={30} /></label>
             <label className="field full"><span>{text.address}</span><textarea name="address" defaultValue={editingBranch?.address ?? ''} maxLength={1000} rows={3} /></label>
@@ -285,7 +281,6 @@ export function OrganizationPage({permissions}: OrganizationPageProps) {
                 {branches.filter((branch) => branch.isActive || branch.id === editingWarehouse?.branchId).map((branch) => <option key={branch.id} value={branch.id}>{branch.name} ({branch.code})</option>)}
               </select>
             </label>
-            <label className="field"><span>{text.code} *</span><input name="code" defaultValue={editingWarehouse?.code ?? ''} maxLength={40} required /></label>
             <label className="field"><span>{text.name} *</span><input name="name" defaultValue={editingWarehouse?.name ?? ''} maxLength={160} required /></label>
             <label className="field">
               <span>{text.warehouseType} *</span>
@@ -360,11 +355,11 @@ function BranchList({branches, pending, saving, canManage, onEdit, onStatus}: {
   return <><div className="table-scroll master-desktop-table"><table className="master-table">
     <thead><tr><th>{text.code}</th><th>{text.name}</th><th>{text.phone}</th><th>{text.headOffice}</th><th>{text.status}</th>{canManage ? <th>{text.actions}</th> : null}</tr></thead>
     <tbody>{branches.map((branch) => <tr key={branch.id}>
-      <td>{branch.code}</td><td>{branch.name}</td><td>{branch.phone ?? '\u2014'}</td><td>{branch.isHeadOffice ? text.yes : text.no}</td><td><StatusPill active={branch.isActive} /></td>
+      <td className="organization-code" dir="ltr">{branch.code}</td><td>{branch.name}</td><td>{branch.phone ?? '\u2014'}</td><td>{branch.isHeadOffice ? text.yes : text.no}</td><td><StatusPill active={branch.isActive} /></td>
       {canManage ? <td><BranchActions branch={branch} saving={saving} onEdit={onEdit} onStatus={onStatus} /></td> : null}
     </tr>)}</tbody>
   </table></div><div className="master-mobile-list">{branches.map((branch) => <article className="master-mobile-card" key={branch.id}>
-    <header><div><small>{branch.code}</small><h3>{branch.name}</h3></div><StatusPill active={branch.isActive} /></header>
+    <header><div><small className="organization-code" dir="ltr">{branch.code}</small><h3>{branch.name}</h3></div><StatusPill active={branch.isActive} /></header>
     <dl><dt>{text.phone}</dt><dd>{branch.phone ?? '\u2014'}</dd><dt>{text.headOffice}</dt><dd>{branch.isHeadOffice ? text.yes : text.no}</dd></dl>
     {canManage ? <BranchActions branch={branch} saving={saving} onEdit={onEdit} onStatus={onStatus} /> : null}
   </article>)}</div></>;
@@ -390,11 +385,11 @@ function WarehouseList({warehouses, pending, saving, canManage, onEdit, onStatus
   return <><div className="table-scroll master-desktop-table"><table className="master-table">
     <thead><tr><th>{text.code}</th><th>{text.name}</th><th>{text.branch}</th><th>{text.warehouseType}</th><th>{text.allowNegative}</th><th>{text.status}</th>{canManage ? <th>{text.actions}</th> : null}</tr></thead>
     <tbody>{warehouses.map((warehouse) => <tr key={warehouse.id}>
-      <td>{warehouse.code}</td><td>{warehouse.name}</td><td>{warehouse.branchName}</td><td>{warehouseTypeLabel(warehouse.warehouseType)}</td><td>{warehouse.allowNegative ? text.yes : text.no}</td><td><StatusPill active={warehouse.isActive} /></td>
+      <td className="organization-code" dir="ltr">{warehouse.code}</td><td>{warehouse.name}</td><td>{warehouse.branchName}</td><td>{warehouseTypeLabel(warehouse.warehouseType)}</td><td>{warehouse.allowNegative ? text.yes : text.no}</td><td><StatusPill active={warehouse.isActive} /></td>
       {canManage ? <td><WarehouseActions warehouse={warehouse} saving={saving} onEdit={onEdit} onStatus={onStatus} /></td> : null}
     </tr>)}</tbody>
   </table></div><div className="master-mobile-list">{warehouses.map((warehouse) => <article className="master-mobile-card" key={warehouse.id}>
-    <header><div><small>{warehouse.code}</small><h3>{warehouse.name}</h3></div><StatusPill active={warehouse.isActive} /></header>
+    <header><div><small className="organization-code" dir="ltr">{warehouse.code}</small><h3>{warehouse.name}</h3></div><StatusPill active={warehouse.isActive} /></header>
     <dl><dt>{text.branch}</dt><dd>{warehouse.branchName}</dd><dt>{text.warehouseType}</dt><dd>{warehouseTypeLabel(warehouse.warehouseType)}</dd><dt>{text.allowNegative}</dt><dd>{warehouse.allowNegative ? text.yes : text.no}</dd></dl>
     {canManage ? <WarehouseActions warehouse={warehouse} saving={saving} onEdit={onEdit} onStatus={onStatus} /> : null}
   </article>)}</div></>;

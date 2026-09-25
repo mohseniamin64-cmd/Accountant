@@ -58,7 +58,9 @@ export async function loadAuthenticatedUser(
         preferred_amount_unit,
         preferred_workspace
       FROM users
-      WHERE id = $1 AND is_active = true
+      WHERE id = $1
+        AND is_active = true
+        AND account_status = 'active'
     `,
     [userId],
   );

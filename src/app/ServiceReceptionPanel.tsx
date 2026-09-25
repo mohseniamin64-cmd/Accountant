@@ -1,22 +1,29 @@
-import {ClipboardCheck, PackageCheck, Search} from 'lucide-react';
-import {useState, type FormEvent} from 'react';
+import {ClipboardCheck, PackageCheck, ScanLine, Search} from 'lucide-react';
+import {useCallback, useRef, useState, type FormEvent} from 'react';
 import {api, errorMessage, postJson} from './api.js';
 import {ContextHelpButton} from './ContextHelpButton.js';
 import {formatJalaliDate} from './jalali-date.js';
 import {appHelp} from './help-content.js';
 import {ActionFeedback} from './MasterDataUi.js';
+import {SerialBarcodeScanner} from './SerialBarcodeScanner.js';
+import {
+  ServiceIntakePrint,
+  type ServiceIntakePrintData,
+} from './ServiceIntakePrint.js';
 import type {
   ServiceOptions,
   ServiceSerialLookup,
 } from './service.types.js';
 
 interface Props {
+  companyName: string;
   options: ServiceOptions;
   pending: boolean;
   onCreated: () => Promise<void>;
 }
 
 export function ServiceReceptionPanel({
+  companyName,
   options,
   pending: optionsPending,
   onCreated,
@@ -27,12 +34,13 @@ export function ServiceReceptionPanel({
   const [formVersion, setFormVersion] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [printData, setPrintData] = useState<ServiceIntakePrintData | null>(null);
+  const serialInputRef = useRef<HTMLInputElement | null>(null);
 
-  async function lookupSerial(form: HTMLFormElement): Promise<void> {
-    const serialNumber = String(
-      new FormData(form).get('serialNumber') ?? '',
-    ).trim();
-    if (!serialNumber) {
+  async function lookupSerial(serialNumber: string): Promise<void> {
+    const normalizedSerial = serialNumber.trim();
+    if (!normalizedSerial) {
       setError('شماره سریال دستگاه را وارد کنید.');
       return;
     }
@@ -42,18 +50,26 @@ export function ServiceReceptionPanel({
     setLookup(null);
     try {
       const found = await api<ServiceSerialLookup>(
-        '/api/service/serial-lookup/' + encodeURIComponent(serialNumber),
+        '/api/service/serial-lookup/' + encodeURIComponent(normalizedSerial),
       );
       if (found.serialStatus !== 'sold') {
         throw new Error('این دستگاه در وضعیت قابل پذیرش برای خدمات نیست.');
       }
       setLookup(found);
-      setLookedUpSerial(serialNumber);
+      setLookedUpSerial(normalizedSerial);
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
       setWorking(false);
     }
+  }
+
+  function handleDetectedSerial(serialNumber: string): void {
+    if (serialInputRef.current) serialInputRef.current.value = serialNumber;
+    setLookup(null);
+    setLookedUpSerial('');
+    setScannerOpen(false);
+    void lookupSerial(serialNumber);
   }
 
   async function receive(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -75,6 +91,17 @@ export function ServiceReceptionPanel({
         id: string;
         orderNumber: string;
         trackingCode: string;
+        printIntent?: boolean;
+        smsQueued?: boolean;
+        printSnapshot?: {
+          companyName: string; branchName: string; orderNumber: string; trackingCode: string;
+          receivedAt: string; customerName: string; customerMobile: string | null;
+          productName: string; serialNumber: string; complaint: string;
+          intakeCondition: string | null; receivedAccessories: string | null;
+          coverageSource: 'sale_warranty' | 'service_warranty' | 'none';
+          coverageEndsOn: string | null; paperSize: 'A4' | '80mm';
+          printReceipt: boolean; printDeviceLabel: boolean;
+        } | null;
       }>('/api/service/orders', {
         branchId: String(form.get('branchId') ?? ''),
         serialNumber,
@@ -86,8 +113,18 @@ export function ServiceReceptionPanel({
       });
       setSuccess(
         'پذیرش با موفقیت ثبت شد. کد پیگیری مشتری: ' +
-          created.trackingCode,
+          created.trackingCode +
+          (created.smsQueued ? ' پیامک پذیرش در صف ارسال قرار گرفت.' : ''),
       );
+      if (created.printIntent && created.printSnapshot) {
+        const snapshot = created.printSnapshot;
+        setPrintData({
+          ...snapshot,
+          warrantyLabel: snapshot.coverageSource === 'none'
+            ? 'خارج از گارانتی'
+            : 'تحت پوشش گارانتی' + (snapshot.coverageEndsOn ? ' تا ' + formatJalaliDate(snapshot.coverageEndsOn) : ''),
+        });
+      }
       setLookup(null);
       setLookedUpSerial('');
       formElement.reset();
@@ -100,16 +137,20 @@ export function ServiceReceptionPanel({
     }
   }
 
+  const finishPrint = useCallback(() => setPrintData(null), []);
+
   return (
+    <>
+    {printData ? <ServiceIntakePrint data={printData} onFinished={finishPrint} /> : null}
     <form
       className="form-card service-reception-card"
       key={formVersion}
       onSubmit={(event) => void receive(event)}
     >
-      <div className="form-card-heading">
+      <div className="form-card-heading service-reception-panel-heading">
         <ContextHelpButton help={appHelp.serviceReception} />
-        <h2>پذیرش دستگاه فروخته‌شده</h2>
-        <p>استعلام سریال پیش از ثبت پرونده الزامی است؛ عکس اختیاری خواهد بود.</p>
+        <h2>استعلام و ثبت پذیرش دستگاه</h2>
+        <p>ابتدا شماره سریال را استعلام کنید؛ سپس اطلاعات واقعی دستگاه و گارانتی نمایش داده می‌شود.</p>
       </div>
       <div className="form-grid">
         <label className="field">
@@ -136,25 +177,43 @@ export function ServiceReceptionPanel({
               disabled={working}
               maxLength={160}
               name="serialNumber"
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                void lookupSerial(event.currentTarget.value);
+              }}
               onChange={() => {
                 setLookup(null);
                 setLookedUpSerial('');
               }}
               required
+              ref={serialInputRef}
             />
             <button
               disabled={working}
               onClick={(event) => {
-                const form = event.currentTarget.form;
-                if (form) void lookupSerial(form);
+                if (serialInputRef.current) void lookupSerial(serialInputRef.current.value);
               }}
               type="button"
             >
               <Search aria-hidden /> استعلام
             </button>
+            <button
+              aria-expanded={scannerOpen}
+              disabled={working}
+              onClick={() => setScannerOpen((value) => !value)}
+              type="button"
+            >
+              <ScanLine aria-hidden /> بارکدخوان
+            </button>
           </span>
         </label>
       </div>
+      <SerialBarcodeScanner
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleDetectedSerial}
+        open={scannerOpen}
+      />
       {lookup ? (
         <div className="service-lookup-result" role="status">
           <PackageCheck aria-hidden />
@@ -217,5 +276,6 @@ export function ServiceReceptionPanel({
         </button>
       </div>
     </form>
+    </>
   );
 }

@@ -1,5 +1,5 @@
-import {CirclePlus, RefreshCw, Search} from 'lucide-react';
-import type {FormEvent, ReactNode} from 'react';
+import {CirclePlus, Search} from 'lucide-react';
+import type {FormEvent, ReactNode, Ref} from 'react';
 import {ContextHelpButton} from './ContextHelpButton.js';
 import type {HelpDefinition} from './help-content.js';
 import type {ActiveFilter} from './master-data.helpers.js';
@@ -35,8 +35,13 @@ export function DataToolbar({
   onQueryChange,
   onActiveChange,
   onSearch,
-  onRefresh,
+  showSearchButton = true,
+  partyType,
+  onPartyTypeChange,
+  moreOpen = false,
+  onMoreFilters,
   onCreate,
+  createButtonRef,
 }: {
   query: string;
   active: ActiveFilter;
@@ -45,9 +50,14 @@ export function DataToolbar({
   createLabel: string;
   onQueryChange: (value: string) => void;
   onActiveChange: (value: ActiveFilter) => void;
-  onSearch: (event: FormEvent<HTMLFormElement>) => void;
-  onRefresh: () => void;
+  onSearch?: (event: FormEvent<HTMLFormElement>) => void;
+  showSearchButton?: boolean;
+  partyType?: 'all' | 'person' | 'company';
+  onPartyTypeChange?: (value: 'all' | 'person' | 'company') => void;
+  moreOpen?: boolean;
+  onMoreFilters?: () => void;
   onCreate: () => void;
+  createButtonRef?: Ref<HTMLButtonElement>;
 }) {
   return (
     <form className="master-data-toolbar" onSubmit={onSearch}>
@@ -63,7 +73,7 @@ export function DataToolbar({
           />
         </span>
       </label>
-      <label className="field">
+      <label className="field party-status-filter-field">
         <span>{text.activeFilter}</span>
         <select
           value={active}
@@ -74,15 +84,32 @@ export function DataToolbar({
           <option value="all">{text.allStatuses}</option>
         </select>
       </label>
+      {partyType && onPartyTypeChange ? (
+        <label className="field party-type-filter-field">
+          <span>نوع شخص</span>
+          <select
+            value={partyType}
+            onChange={(event) => onPartyTypeChange(event.target.value as 'all' | 'person' | 'company')}
+          >
+            <option value="all">همه نوع‌ها</option>
+            <option value="person">حقیقی</option>
+            <option value="company">حقوقی</option>
+          </select>
+        </label>
+      ) : null}
       <div className="master-toolbar-actions">
-        <button className="button secondary" disabled={pending} type="submit">
-          <Search aria-hidden />{text.search}
-        </button>
-        <button className="button secondary" disabled={pending} onClick={onRefresh} type="button">
-          <RefreshCw aria-hidden />{text.refresh}
-        </button>
+        {showSearchButton ? (
+          <button className="button secondary" disabled={pending} type="submit">
+            <Search aria-hidden />{text.search}
+          </button>
+        ) : null}
+        {onMoreFilters ? (
+          <button className={'button secondary more-filters-button' + (moreOpen ? ' active' : '')} onClick={onMoreFilters} type="button">
+            فیلترهای بیشتر
+          </button>
+        ) : null}
         {canCreate ? (
-          <button className="button primary" onClick={onCreate} type="button">
+          <button className="button primary" onClick={onCreate} ref={createButtonRef} type="button">
             <CirclePlus aria-hidden />{createLabel}
           </button>
         ) : null}

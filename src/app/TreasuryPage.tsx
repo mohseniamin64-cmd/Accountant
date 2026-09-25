@@ -4,7 +4,6 @@ import {
   ChevronDown,
   CirclePlus,
   Landmark,
-  RefreshCw,
   WalletCards,
   X,
 } from 'lucide-react';
@@ -456,18 +455,6 @@ export function TreasuryPage({
           <h1>{'\u062e\u0632\u0627\u0646\u0647'}</h1>
         </div>
         <div className="heading-actions">
-          <button
-            className="button secondary"
-            type="button"
-            disabled={Boolean(pending)}
-            onClick={() => {
-              setError(null);
-              void loadBase().catch((caught) => setError(errorMessage(caught)));
-            }}
-          >
-            <RefreshCw aria-hidden />
-            {'\u0628\u0627\u0632\u062e\u0648\u0627\u0646\u06cc'}
-          </button>
           {canManage ? (
             <button
               className="button primary"

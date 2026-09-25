@@ -22,7 +22,7 @@ import {execFile} from 'node:child_process';
 import {pipeline} from 'node:stream/promises';
 import {AppError} from '../../common/errors.js';
 import {config} from '../../config.js';
-import {query} from '../../db/pool.js';
+import {query, withTransaction} from '../../db/pool.js';
 
 const execFileAsync = promisify(execFile);
 const MAGIC = Buffer.from('DIACOBK1', 'ascii');
@@ -36,6 +36,28 @@ type TriggerType =
   | 'end_of_day'
   | 'server_shutdown'
   | 'drive_connected';
+
+type DatabaseArguments = {
+  databaseUrl: string;
+  environment: NodeJS.ProcessEnv;
+  username: string;
+  databaseName: string;
+};
+
+export type BackupInstallationIdentity = {
+  serial: string;
+  appVersion: string;
+  filenamePattern: string;
+};
+
+type StartedBackupRun = {
+  id: string;
+  fileName: string;
+  metadata: Record<string, string | number>;
+};
+
+const INSTALLATION_SETTING_KEY = 'backup.installation_identity';
+const installationSerialPattern = /^[A-Z0-9][A-Z0-9-]{5,47}$/;
 
 function encryptionKey(): Buffer {
   if (!config.backupEncryptionKey) {
@@ -56,12 +78,180 @@ function encryptionKey(): Buffer {
   return key;
 }
 
-function databaseArguments(): {
-  databaseUrl: string;
-  environment: NodeJS.ProcessEnv;
-} {
+function createInstallationSerial(): string {
+  return `DIA-${randomBytes(5).toString('hex').toUpperCase()}`;
+}
+
+function validInstallationSerial(value: unknown): value is string {
+  return typeof value === 'string' && installationSerialPattern.test(value);
+}
+
+function safeFileSegment(value: string, fallback: string): string {
+  const normalized = value
+    .normalize('NFKC')
+    .trim()
+    .replace(/[\\/:*?"<>|\u0000-\u001F]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+  return normalized || fallback;
+}
+
+function jalaliParts(date: Date): {date: string; time: string} {
+  const calendarParts = new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn', {
+    timeZone: 'Asia/Tehran',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const clockParts = new Intl.DateTimeFormat('en-US-u-nu-latn', {
+    timeZone: 'Asia/Tehran',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const take = (parts: Intl.DateTimeFormatPart[], type: string) =>
+    parts.find((part) => part.type === type)?.value ?? '00';
+  return {
+    date: `${take(calendarParts, 'year')}${take(calendarParts, 'month')}${take(calendarParts, 'day')}`,
+    time: `${take(clockParts, 'hour')}${take(clockParts, 'minute')}${take(clockParts, 'second')}`,
+  };
+}
+
+function backupFilename(input: {
+  companyName: string;
+  serial: string;
+  jalaliDate: string;
+  jalaliTime: string;
+  dailySequence: number;
+}): string {
+  const company = safeFileSegment(input.companyName, 'company');
+  const version = safeFileSegment(config.appVersion, '0');
+  const sequence = String(input.dailySequence).padStart(3, '0');
+  return `${company}-v${version}-${input.serial}-${input.jalaliDate}-${input.jalaliTime}-V${sequence}.dump.enc`;
+}
+
+export async function getBackupInstallationIdentity(input: {
+  companyId: string;
+  userId: string | null;
+}): Promise<BackupInstallationIdentity> {
+  return withTransaction(async (client) => {
+    const existing = await client.query<{setting_value: {serial?: unknown}}>(
+      `
+        SELECT setting_value
+        FROM app_settings
+        WHERE company_id = $1
+          AND scope_type = 'company'
+          AND scope_id = $1
+          AND setting_key = $2
+        FOR UPDATE
+      `,
+      [input.companyId, INSTALLATION_SETTING_KEY],
+    );
+    const stored = existing.rows[0]?.setting_value?.serial;
+    const serial = validInstallationSerial(stored)
+      ? stored
+      : createInstallationSerial();
+    if (!validInstallationSerial(stored)) {
+      await client.query(
+        `
+          INSERT INTO app_settings (
+            company_id, scope_type, scope_id, setting_key, setting_value, updated_by
+          )
+          VALUES ($1, 'company', $1, $2, $3, $4)
+          ON CONFLICT (company_id, scope_type, scope_id, setting_key)
+          DO UPDATE SET
+            setting_value = EXCLUDED.setting_value,
+            updated_by = EXCLUDED.updated_by,
+            row_version = app_settings.row_version + 1
+        `,
+        [input.companyId, INSTALLATION_SETTING_KEY, JSON.stringify({serial}), input.userId],
+      );
+    }
+    return {
+      serial,
+      appVersion: config.appVersion,
+      filenamePattern: 'نام شرکت · نسخه برنامه · شناسه نصب · تاریخ و ساعت شمسی · V001',
+    };
+  });
+}
+
+async function startBackupRun(input: {
+  companyId: string;
+  userId: string | null;
+  backupType: BackupType;
+  triggerType: TriggerType;
+}): Promise<StartedBackupRun> {
+  const createdAt = new Date();
+  const jalali = jalaliParts(createdAt);
+  const identity = await getBackupInstallationIdentity({
+    companyId: input.companyId,
+    userId: input.userId,
+  });
+  return withTransaction(async (client) => {
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+      `backup:${input.companyId}:${jalali.date}`,
+    ]);
+    const [company, sequence] = await Promise.all([
+      client.query<{name: string}>('SELECT name_fa AS name FROM companies WHERE id = $1', [input.companyId]),
+      client.query<{next_sequence: number}>(
+        `
+          SELECT (count(*) + 1)::integer AS next_sequence
+          FROM backup_runs
+          WHERE company_id = $1
+            AND (started_at AT TIME ZONE 'Asia/Tehran')::date =
+              (now() AT TIME ZONE 'Asia/Tehran')::date
+        `,
+        [input.companyId],
+      ),
+    ]);
+    const companyName = company.rows[0]?.name ?? 'company';
+    const dailySequence = sequence.rows[0]?.next_sequence ?? 1;
+    const fileName = backupFilename({
+      companyName,
+      serial: identity.serial,
+      jalaliDate: jalali.date,
+      jalaliTime: jalali.time,
+      dailySequence,
+    });
+    const metadata = {
+      companyName,
+      installationSerial: identity.serial,
+      applicationVersion: identity.appVersion,
+      jalaliDate: jalali.date,
+      jalaliTime: jalali.time,
+      dailySequence,
+      fileName,
+    };
+    const run = await client.query<{id: string}>(
+      `
+        INSERT INTO backup_runs (
+          company_id, backup_type, trigger_type, status, requested_by, metadata
+        )
+        VALUES ($1, $2, $3, 'running', $4, $5)
+        RETURNING id
+      `,
+      [
+        input.companyId,
+        input.backupType,
+        input.triggerType,
+        input.userId,
+        JSON.stringify(metadata),
+      ],
+    );
+    const id = run.rows[0]?.id;
+    if (!id) throw new Error('Backup run was not created');
+    return {id, fileName, metadata};
+  });
+}
+
+function databaseArguments(): DatabaseArguments {
   const database = new URL(config.databaseUrl);
   const password = decodeURIComponent(database.password);
+  const username = decodeURIComponent(database.username);
+  const databaseName = decodeURIComponent(database.pathname.replace(/^\//, ''));
   database.password = '';
   return {
     databaseUrl: database.toString(),
@@ -69,7 +259,126 @@ function databaseArguments(): {
       ...process.env,
       ...(password ? {PGPASSWORD: password} : {}),
     },
+    username,
+    databaseName,
   };
+}
+
+function commandWasNotFound(error: unknown): boolean {
+  return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+}
+
+function dockerBackupContainer(): string | null {
+  return config.backupDockerContainer ?? null;
+}
+
+function dockerTemporaryDumpPath(localPath: string): string {
+  return `/tmp/${path.basename(localPath)}`;
+}
+
+async function removeDockerTemporaryFile(
+  container: string,
+  temporaryPath: string,
+): Promise<void> {
+  await execFileAsync('docker', ['exec', container, 'rm', '-f', temporaryPath], {
+    windowsHide: true,
+    maxBuffer: 1024 * 1024,
+  }).catch(() => undefined);
+}
+
+async function dumpDatabaseWithDocker(
+  database: DatabaseArguments,
+  localPath: string,
+  container: string,
+): Promise<void> {
+  const containerPath = dockerTemporaryDumpPath(localPath);
+  try {
+    await execFileAsync(
+      'docker',
+      [
+        'exec',
+        container,
+        'pg_dump',
+        '--format=custom',
+        '--no-owner',
+        '--no-privileges',
+        '--file',
+        containerPath,
+        '--username',
+        database.username,
+        '--dbname',
+        database.databaseName,
+      ],
+      {windowsHide: true, maxBuffer: 1024 * 1024},
+    );
+    await execFileAsync('docker', ['cp', `${container}:${containerPath}`, localPath], {
+      windowsHide: true,
+      maxBuffer: 1024 * 1024,
+    });
+  } finally {
+    await removeDockerTemporaryFile(container, containerPath);
+  }
+}
+
+async function dumpDatabase(localPath: string): Promise<void> {
+  const database = databaseArguments();
+  try {
+    await execFileAsync(
+      config.pgDumpPath,
+      [
+        '--format=custom',
+        '--no-owner',
+        '--no-privileges',
+        '--file',
+        localPath,
+        '--dbname',
+        database.databaseUrl,
+      ],
+      {
+        env: database.environment,
+        windowsHide: true,
+        maxBuffer: 1024 * 1024,
+      },
+    );
+  } catch (error) {
+    const container = dockerBackupContainer();
+    if (!commandWasNotFound(error) || !container) throw error;
+    await dumpDatabaseWithDocker(database, localPath, container);
+  }
+}
+
+async function verifyDatabaseDumpWithDocker(
+  localPath: string,
+  container: string,
+): Promise<void> {
+  const containerPath = dockerTemporaryDumpPath(localPath);
+  try {
+    await execFileAsync('docker', ['cp', localPath, `${container}:${containerPath}`], {
+      windowsHide: true,
+      maxBuffer: 1024 * 1024,
+    });
+    await execFileAsync(
+      'docker',
+      ['exec', container, 'pg_restore', '--list', containerPath],
+      {windowsHide: true, maxBuffer: 10 * 1024 * 1024},
+    );
+  } finally {
+    await removeDockerTemporaryFile(container, containerPath);
+  }
+}
+
+async function verifyDatabaseDump(localPath: string): Promise<void> {
+  try {
+    await execFileAsync(
+      config.pgRestorePath,
+      ['--list', localPath],
+      {windowsHide: true, maxBuffer: 10 * 1024 * 1024},
+    );
+  } catch (error) {
+    const container = dockerBackupContainer();
+    if (!commandWasNotFound(error) || !container) throw error;
+    await verifyDatabaseDumpWithDocker(localPath, container);
+  }
 }
 
 async function encryptedFileHash(filePath: string): Promise<string> {
@@ -182,27 +491,8 @@ export async function runBackup(input: {
   byteSize: string;
   sha256: string;
 }> {
-  const runResult = await query<{id: string}>(
-    `
-      INSERT INTO backup_runs (
-        company_id,
-        backup_type,
-        trigger_type,
-        status,
-        requested_by
-      )
-      VALUES ($1, $2, $3, 'running', $4)
-      RETURNING id
-    `,
-    [
-      input.companyId,
-      input.backupType,
-      input.triggerType,
-      input.userId,
-    ],
-  );
-  const runId = runResult.rows[0]?.id;
-  if (!runId) throw new Error('Backup run was not created');
+  const startedRun = await startBackupRun(input);
+  const runId = startedRun.id;
 
   await mkdir(config.backupsDir, {recursive: true});
   const temporaryPath = path.join(config.backupsDir, `.${runId}.dump`);
@@ -212,29 +502,11 @@ export async function runBackup(input: {
       input.backupType === 'external_drive'
         ? await externalBackupPath(input.companyId)
         : config.backupsDir;
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     encryptedPath = path.join(
       targetDirectory,
-      `diaco-${timestamp}-${runId}.dump.enc`,
+      startedRun.fileName,
     );
-    const database = databaseArguments();
-    await execFileAsync(
-      config.pgDumpPath,
-      [
-        '--format=custom',
-        '--no-owner',
-        '--no-privileges',
-        '--file',
-        temporaryPath,
-        '--dbname',
-        database.databaseUrl,
-      ],
-      {
-        env: database.environment,
-        windowsHide: true,
-        maxBuffer: 1024 * 1024,
-      },
-    );
+    await dumpDatabase(temporaryPath);
     await encryptFile(temporaryPath, encryptedPath);
     const file = await stat(encryptedPath);
     const sha256 = await encryptedFileHash(encryptedPath);
@@ -321,14 +593,7 @@ export async function verifyBackup(input: {
   );
   try {
     await decryptFile(source.storage_path, temporaryPath);
-    await execFileAsync(
-      config.pgRestorePath,
-      ['--list', temporaryPath],
-      {
-        windowsHide: true,
-        maxBuffer: 10 * 1024 * 1024,
-      },
-    );
+    await verifyDatabaseDump(temporaryPath);
     const result = await query<{id: string}>(
       `
         INSERT INTO backup_runs (

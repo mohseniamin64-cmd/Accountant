@@ -2,7 +2,6 @@ import {
   CirclePlus,
   Eye,
   Plus,
-  RefreshCw,
   Save,
   Trash2,
   X,
@@ -242,14 +241,6 @@ export function ProductionBomPanel({
           <h2>فرمول‌های ساخت</h2>
         </div>
         <div className="production-heading-actions">
-          <button
-            className="button secondary"
-            disabled={pending}
-            onClick={() => void loadRecords()}
-            type="button"
-          >
-            <RefreshCw aria-hidden /> بازخوانی
-          </button>
           {canManage ? (
             <button className="button primary" onClick={openCreate} type="button">
               <CirclePlus aria-hidden /> فرمول جدید

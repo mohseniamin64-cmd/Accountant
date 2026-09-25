@@ -14,6 +14,10 @@ import {
   requireAuthentication,
   requirePermissions,
 } from '../auth/middleware.js';
+import {
+  loadSessionSecuritySettings,
+  sessionSecuritySchema,
+} from '../auth/session-policy.js';
 
 const companySchema = z.object({
   nameFa: z.string().trim().min(2).max(180).optional(),
@@ -27,6 +31,13 @@ const companySchema = z.object({
   postalCode: z.string().trim().max(20).nullable().optional(),
   defaultAmountUnit: z.enum(['IRR', 'TOMAN']).optional(),
   rowVersion: z.number().int().positive(),
+});
+
+const serviceOutputSchema = z.object({
+  intakePrintEnabled: z.boolean(),
+  paperSize: z.enum(['A4', '80mm']),
+  printReceipt: z.boolean(),
+  printDeviceLabel: z.boolean(),
 });
 
 const upload = multer({
@@ -245,6 +256,60 @@ settingsRouter.post(
 );
 
 settingsRouter.get(
+  '/session-security',
+  requirePermissions(PERMISSIONS.SETTINGS_MANAGE),
+  asyncRoute(async (request, response) => {
+    const actor = currentUser(request);
+    response.json({data: await loadSessionSecuritySettings(actor.companyId)});
+  }),
+);
+
+settingsRouter.put(
+  '/session-security',
+  requirePermissions(PERMISSIONS.SETTINGS_MANAGE),
+  asyncRoute(async (request, response) => {
+    const actor = currentUser(request);
+    const input = sessionSecuritySchema.parse(request.body);
+    const saved = await withTransaction(async (client) => {
+      const result = await client.query<{id: string; setting_value: unknown}>(
+        `
+          INSERT INTO app_settings (
+            company_id, scope_type, scope_id, setting_key, setting_value, updated_by
+          )
+          VALUES ($1, 'company', $1, 'auth.session_security', $2::jsonb, $3)
+          ON CONFLICT (company_id, scope_type, scope_id, setting_key)
+          DO UPDATE SET
+            setting_value = EXCLUDED.setting_value,
+            updated_by = EXCLUDED.updated_by,
+            row_version = app_settings.row_version + 1
+          RETURNING id, setting_value
+        `,
+        [actor.companyId, JSON.stringify(input), actor.id],
+      );
+      const row = result.rows[0];
+      if (!row) throw new Error('Session security settings were not saved');
+      await client.query(
+        `
+          UPDATE sessions
+          SET idle_expires_at = now() + ($2 * interval '1 minute')
+          WHERE user_id IN (SELECT id FROM users WHERE company_id = $1)
+            AND expires_at > now()
+        `,
+        [actor.companyId, input.idleMinutes],
+      );
+      await writeAudit(client, request, {
+        action: 'auth.session_security.update',
+        entityType: 'app_setting',
+        entityId: row.id,
+        after: input,
+      });
+      return row.setting_value;
+    });
+    response.json({data: saved});
+  }),
+);
+
+settingsRouter.get(
   '/connectors',
   requirePermissions(PERMISSIONS.SETTINGS_MANAGE),
   asyncRoute(async (request, response) => {
@@ -265,6 +330,76 @@ settingsRouter.get(
       [actor.companyId],
     );
     response.json({data: result.rows});
+  }),
+);
+
+settingsRouter.get(
+  '/service-output',
+  requirePermissions(PERMISSIONS.SETTINGS_MANAGE),
+  asyncRoute(async (request, response) => {
+    const actor = currentUser(request);
+    const result = await query<{setting_value: unknown}>(
+      `
+        SELECT setting_value
+        FROM app_settings
+        WHERE company_id = $1
+          AND scope_type = 'company'
+          AND scope_id = $1
+          AND setting_key = 'service.output'
+      `,
+      [actor.companyId],
+    );
+    response.json({
+      data: result.rows[0]?.setting_value ?? {
+        intakePrintEnabled: false,
+        paperSize: 'A4',
+        printReceipt: true,
+        printDeviceLabel: true,
+      },
+    });
+  }),
+);
+
+settingsRouter.put(
+  '/service-output',
+  requirePermissions(PERMISSIONS.SETTINGS_MANAGE),
+  asyncRoute(async (request, response) => {
+    const actor = currentUser(request);
+    const input = serviceOutputSchema.parse(request.body);
+    if (input.intakePrintEnabled && !input.printReceipt && !input.printDeviceLabel) {
+      throw new AppError(
+        422,
+        'SERVICE_PRINT_CONTENT_REQUIRED',
+        'برای چاپ پذیرش باید رسید، برچسب دستگاه یا هر دو انتخاب شوند.',
+      );
+    }
+    const saved = await withTransaction(async (client) => {
+      const result = await client.query<{id: string; setting_value: unknown}>(
+        `
+          INSERT INTO app_settings (
+            company_id, scope_type, scope_id, setting_key, setting_value, updated_by
+          )
+          VALUES ($1, 'company', $1, 'service.output', $2::jsonb, $3)
+          ON CONFLICT (company_id, scope_type, scope_id, setting_key)
+          DO UPDATE SET
+            setting_value = EXCLUDED.setting_value,
+            updated_by = EXCLUDED.updated_by,
+            row_version = app_settings.row_version + 1
+          RETURNING id, setting_value
+        `,
+        [actor.companyId, JSON.stringify(input), actor.id],
+      );
+      const row = result.rows[0];
+      if (!row) throw new Error('Service output settings were not saved');
+      await writeAudit(client, request, {
+        action: 'service.output_settings.update',
+        entityType: 'app_setting',
+        entityId: row.id,
+        after: input,
+      });
+      return row.setting_value;
+    });
+    response.json({data: saved});
   }),
 );
 

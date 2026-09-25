@@ -110,6 +110,13 @@
   justify-self: center;
 }
 
+.sale-scan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 .sale-serial-selector > header > div {
   min-width: 0;
   display: grid;
@@ -299,6 +306,8 @@
   }
 
   .sale-serial-selector > header .button,
+  .sale-scan-actions,
+  .sale-scan-actions .button,
   .sale-serial-search .button {
     width: 100%;
   }

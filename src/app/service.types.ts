@@ -66,6 +66,34 @@ export interface ServiceOptions {
   warehouses: ServiceWarehouseOption[];
   products: ServiceProductOption[];
   balances: ServiceInventoryBalance[];
+  technicians?: Array<{id: string; fullName: string; username: string; activeCount: string}>;
+  outputSettings?: {
+    intakePrintEnabled: boolean;
+    paperSize: 'A4' | '80mm';
+    printReceipt: boolean;
+    printDeviceLabel: boolean;
+  };
+}
+
+export interface ServiceReport {
+  from: string | null;
+  to: string | null;
+  branchId: string | null;
+  totalReceived: string;
+  inWarranty: string;
+  outOfWarranty: string;
+  delivered: string;
+  receivedServiceIncomeIrr: string;
+  averageCompletionHours: string | null;
+  installedQuantity: string;
+  chargeablePartsValueIrr: string;
+  partsCostIrr?: string;
+  directServiceCostsIrr?: string;
+  actualServiceCostIrr?: string;
+  technicianPerformance?: Array<{technicianId: string; technicianName: string; assignedCount: string; deliveredCount: string; averageCompletionHours: string | null}>;
+  frequentParts?: Array<{productName: string; quantity: string}>;
+  recurrentFaults?: Array<{fault: string; count: string}>;
+  statusCounts: Record<ServiceStatus, number>;
 }
 
 export interface ServiceSerialHistory {
@@ -112,6 +140,10 @@ export interface ServiceOrderSummary {
   productName: string;
   customerName: string;
   customerMobile: string | null;
+  assignedTo: string | null;
+  assignedToName: string | null;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  dueAt: string | null;
 }
 
 export interface ServiceEvent {
@@ -129,6 +161,8 @@ export interface ServicePart {
   usageType: 'installed' | 'removed';
   isChargeable: boolean;
   unitPriceIrr: string;
+  unitCostIrr?: string;
+  isReversed?: boolean;
   removedDisposition: RemovedDisposition | null;
   createdAt: string;
   productCode: string;
@@ -160,6 +194,7 @@ export interface ServiceAttachment {
 }
 
 export interface ServiceOrderDetail {
+  company_name?: string;
   id: string;
   branchId: string;
   branchName: string;
@@ -179,6 +214,13 @@ export interface ServiceOrderDetail {
   paidIrr: string;
   deliveredAt: string | null;
   rowVersion: number;
+  assignedTo?: string | null;
+  assignedToName?: string | null;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  dueAt?: string | null;
+  coverageSource?: 'sale_warranty' | 'service_warranty' | 'none';
+  coverageStartsOn?: string | null;
+  coverageEndsOn?: string | null;
   serialNumber: string;
   productCode: string;
   productName: string;
@@ -192,6 +234,10 @@ export interface ServiceOrderDetail {
   parts: ServicePart[];
   serviceWarranty: ServiceWarranty | null;
   attachments: ServiceAttachment[];
+  assignments?: Array<{id: string; assignedToName: string; priority: string; dueAt: string | null; note: string | null; createdAt: string}>;
+  inspections?: Array<{id: string; inspectionType: 'diagnosis' | 'final_test'; resultStatus: 'passed' | 'failed' | 'conditional'; observedFault: string; faultCause: string | null; actionTaken: string | null; testResult: string | null; recordedByName: string; createdAt: string}>;
+  costs?: Array<{id: string; costType: 'labor' | 'outsourcing' | 'transport' | 'other'; amountIrr: string; description: string; recordedByName: string; createdAt: string}>;
+  replacement?: {id: string; oldSerialNumber: string; newSerialNumber: string; coverageEndsOn: string | null; oldSerialDisposition: 'returned' | 'scrapped'; reason: string; createdAt: string} | null;
 }
 
 export interface AvailableServicePartSerial {

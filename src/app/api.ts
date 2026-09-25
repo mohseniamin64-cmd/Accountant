@@ -4,6 +4,13 @@ import type {
   BootstrapResponse,
 } from '../../shared/contracts.js';
 
+export const AUTHENTICATION_REQUIRED_EVENT = 'diaco:authentication-required';
+
+function notifyAuthenticationRequired(): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(AUTHENTICATION_REQUIRED_EVENT));
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -37,9 +44,13 @@ async function parseResponse<T>(response: Response): Promise<T> {
   const body = (await response.json()) as ApiSuccess<T> | ApiErrorBody;
   if (!response.ok || 'error' in body) {
     const error = 'error' in body ? body.error : null;
+    const code = error?.code ?? 'HTTP_ERROR';
+    if (response.status === 401 && code === 'AUTHENTICATION_REQUIRED') {
+      notifyAuthenticationRequired();
+    }
     throw new ApiError(
       response.status,
-      error?.code ?? 'HTTP_ERROR',
+      code,
       error?.message ?? '\u0627\u0631\u062a\u0628\u0627\u0637 \u0628\u0627 \u0633\u0631\u0648\u0631 \u0628\u0627 \u062e\u0637\u0627 \u0631\u0648\u0628\u0647\u200c\u0631\u0648 \u0634\u062f.',
       error?.details,
     );

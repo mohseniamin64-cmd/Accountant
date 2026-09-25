@@ -61,6 +61,39 @@ accountingRouter.use(
 );
 
 accountingRouter.get(
+  '/dashboard',
+  asyncRoute(async (request, response) => {
+    const actor = currentUser(request);
+    const [sales, purchases, products, parties] = await Promise.all([
+      query<{count: string}>(
+        'SELECT count(*)::text AS count FROM sales_invoices WHERE company_id = $1',
+        [actor.companyId],
+      ),
+      query<{count: string}>(
+        'SELECT count(*)::text AS count FROM purchase_invoices WHERE company_id = $1',
+        [actor.companyId],
+      ),
+      query<{count: string}>(
+        'SELECT count(*)::text AS count FROM products WHERE company_id = $1 AND is_active = true',
+        [actor.companyId],
+      ),
+      query<{count: string}>(
+        'SELECT count(*)::text AS count FROM parties WHERE company_id = $1 AND is_active = true',
+        [actor.companyId],
+      ),
+    ]);
+    response.json({
+      data: {
+        salesInvoices: Number(sales.rows[0]?.count ?? 0),
+        purchaseInvoices: Number(purchases.rows[0]?.count ?? 0),
+        activeProducts: Number(products.rows[0]?.count ?? 0),
+        activeParties: Number(parties.rows[0]?.count ?? 0),
+      },
+    });
+  }),
+);
+
+accountingRouter.get(
   '/options',
   asyncRoute(async (request, response) => {
     const actor = currentUser(request);

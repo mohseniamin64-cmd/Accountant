@@ -20,6 +20,8 @@ import {formatJalaliDate, formatJalaliDateTime} from './jalali-date.js';
 import {appHelp, type HelpDefinition} from './help-content.js';
 import {amountIrrToInput} from './master-data.helpers.js';
 import {ActionFeedback} from './MasterDataUi.js';
+import {ServiceWorkflowPanel} from './ServiceWorkflowPanel.js';
+import {ServiceExitPanel} from './ServiceExitPanel.js';
 import {formatIrrAmount} from './purchase.helpers.js';
 import {
   allowedServiceTransitions,
@@ -164,7 +166,7 @@ export function ServiceOrderDetailPanel({
     () =>
       order.parts.reduce(
         (sum, part) =>
-          part.usageType === 'installed' && part.isChargeable
+          part.usageType === 'installed' && part.isChargeable && !part.isReversed
             ? sum +
               BigInt(
                 new Decimal(part.quantity)
@@ -322,6 +324,16 @@ export function ServiceOrderDetailPanel({
       }),
     );
   }
+  function reversePart(event: FormEvent<HTMLFormElement>, partId: string): void {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    void run('part-reverse-' + partId, 'برگشت قطعه به انبار با سابقه اصلاحی ثبت شد.', () =>
+      postJson('/api/service/orders/' + order.id + '/parts/' + partId + '/reverse', {
+        returnWarehouseId: String(form.get('returnWarehouseId')),
+        reason: String(form.get('reason') ?? '').trim(),
+      }),
+    );
+  }
 
   function submitFinalize(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -354,6 +366,9 @@ export function ServiceOrderDetailPanel({
         warrantyDescription:
           String(form.get('warrantyDescription') ?? '').trim() || null,
         deliveryNote: String(form.get('deliveryNote') ?? '').trim(),
+        deliveredToName: String(form.get('deliveredToName') ?? '').trim() || null,
+        deliveredToMobile: String(form.get('deliveredToMobile') ?? '').trim() || null,
+        deliveryConfirmation: String(form.get('deliveryConfirmation') ?? '').trim() || null,
       }),
     );
   }
@@ -398,6 +413,8 @@ export function ServiceOrderDetailPanel({
           <dt>مانده</dt><dd>{formatIrrAmount(remainingIrr, amountUnit)}</dd>
         </dl>
       </div>
+      {canRepair ? <ServiceWorkflowPanel amountUnit={amountUnit} onReload={onReload} options={options} order={order} /> : null}
+      <ServiceExitPanel order={order} options={options} canLocate={canAttach} canDeliver={canDeliver} onReload={onReload}/>
 
       <article className="service-complaint">
         <h3>شرح پذیرش</h3>
@@ -637,6 +654,8 @@ export function ServiceOrderDetailPanel({
                   <b>{part.usageType === 'installed' ? formatIrrAmount(part.unitPriceIrr, amountUnit) : '—'}</b>
                   <span>{part.isChargeable ? 'قابل دریافت' : 'بدون دریافت'}</span>
                 </div>
+                {canRecordParts && part.usageType === 'installed' && !part.isReversed ? <details className="service-part-correction"><summary>اصلاح و برگشت قطعه</summary><form onSubmit={(event) => reversePart(event, part.id)}><label className="field"><span>انبار برگشت *</span><select name="returnWarehouseId" required><option value="">انتخاب انبار</option>{options.warehouses.map(warehouse => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>)}</select></label><label className="field"><span>دلیل اصلاح *</span><input minLength={3} maxLength={2000} name="reason" required /></label><button className="button danger" disabled={busy !== null}>ثبت برگشت</button></form></details> : null}
+                {part.isReversed ? <span className="status-pill">برگشت اصلاحی ثبت شده</span> : null}
               </article>
             ))}
           </div>
@@ -768,6 +787,14 @@ export function ServiceOrderDetailPanel({
           ) : null}
           <div className="form-grid">
             <label className="field">
+              <span>نام تحویل‌گیرنده *</span>
+              <input defaultValue={order.customerName} maxLength={180} minLength={2} name="deliveredToName" required />
+            </label>
+            <label className="field">
+              <span>شماره تماس تحویل‌گیرنده</span>
+              <input defaultValue={order.customerMobile ?? ''} inputMode="tel" maxLength={30} name="deliveredToMobile" />
+            </label>
+            <label className="field">
               <span>مدت گارانتی خدمات *</span>
               <select defaultValue="1" name="serviceWarrantyMonths">
                 <option value="1">یک ماه</option>
@@ -781,6 +808,10 @@ export function ServiceOrderDetailPanel({
             <label className="field full">
               <span>یادداشت تحویل *</span>
               <textarea maxLength={2000} minLength={2} name="deliveryNote" required rows={2} />
+            </label>
+            <label className="field full">
+              <span>تأیید تحویل‌گیرنده</span>
+              <textarea maxLength={2000} name="deliveryConfirmation" placeholder="نوع مدرک، کد تأیید یا توضیح تحویل حضوری (اختیاری)" rows={2} />
             </label>
           </div>
           <div className="form-actions">
