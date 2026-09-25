@@ -47,7 +47,7 @@ npm run build
 npm start
 ```
 
-برای توسعه از `npm run dev` استفاده کنید. راه‌اندازی backend به `DATABASE_URL` نیاز دارد و migrationهای معوق را اجرا می‌کند؛ روی دیتابیس موجود بدون پشتیبان معتبر آن را اجرا نکنید. در بررسی نهایی این بسته، npm run lint، npm test و npm run build با موفقیت اجرا شدند؛ health، migration روی دیتابیس زنده و restore کامل همچنان اجرا نشده‌اند.
+برای توسعه از `npm run dev` استفاده کنید. راه‌اندازی backend به `DATABASE_URL` نیاز دارد و migrationهای معوق را اجرا می‌کند؛ روی دیتابیس موجود بدون پشتیبان معتبر آن را اجرا نکنید. در بررسی این بسته در 2026-09-25، `npm run lint`, `npm test` و `npm run build` موفق شدند؛ `npm test` شامل 26 فایل/114 تست بود. Build هشدار chunk بزرگ‌تر از 500 kB داد. health، migration روی دیتابیس زنده و restore کامل اجرا نشده‌اند.
 
 ## تاریخچه و راستی‌آزمایی
 

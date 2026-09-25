@@ -6,7 +6,7 @@
 - Recorded the observed Docker PostgreSQL 16 volume and local backup folder without storing their contents or credentials.
 - Explicitly recorded that current backup verification is not a full restore, that `.env.example` uses a stale 4173 port, and that the app was not listening during inspection.
 - Repository was public per owner statement. A heuristic secret-pattern scan over 11 Git commits found no matches; comprehensive secret scanning and isolated restore remain open.
-- The documentation is ready for commit and push after final verification. See [PROJECT_STATUS](PROJECT_STATUS.md) and [open recovery questions](WINDOWS-REINSTALL.md).
+- Initial documentation package was pushed to `main` as `3625eb3563714a5dbd20fd818b69106a9df32320`; follow-up corrections expand the decision register and conversation errors. Runtime restore gap and owner-supplied installation details remain open. See [PROJECT_STATUS](PROJECT_STATUS.md) and [WINDOWS-REINSTALL](WINDOWS-REINSTALL.md).
 
 ## مستندات — 2026-09-25
 

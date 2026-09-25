@@ -44,6 +44,8 @@
 
 بازبینی جدید در همان workspace نشان داد Docker `diaco-postgres` (`postgres:16-alpine`) با named volume `diaco-postgres-data` روشن بود؛ app listener روی 3000/4173/5000 نبود؛ پنج backup رمزگذاری‌شده در `data/backups` تا تاریخ 1405/06/31 دیده شد؛ `data/uploads` در همین workspace خالی بود. این snapshot به معنای صحت/restore یا وضعیت نصب دیگری نیست.
 
+بسته root docs ابتدا در commit `3625eb3563714a5dbd20fd818b69106a9df32320` به `main` رفت و remote دوباره خوانده شد؛ 14 فایل الزامی موجود بود، 192 پیوند محلی بی‌نقص و الگوی Secret در Markdown برابر صفر بود. پس از push، کامل‌بودن دفتر تصمیم و خطاهای transcript مرور شد و همین تغییرات corrective هنوز باید push شوند. در workspace اجرای 2026-09-25: `npm run lint`, `npm test` (26/114) و `npm run build` موفق؛ health/migration/restore کامل اجرا نشده.
+
 برای restart آینده قبل از توقف فرایند، روش اجرا و دسترسی به تنظیمات معتبر را بررسی کنید. سابقه شکست ناشی از نبود DATABASE_URL در محیط جدید وجود دارد؛ از نمونه یا حدس رمز استفاده نشود.
 
 ## قدم بعدی

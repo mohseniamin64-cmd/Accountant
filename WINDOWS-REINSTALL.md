@@ -29,12 +29,12 @@
 ## پس از نصب Windows جدید
 
 1. Git، Node.js/npm سازگار با `package-lock.json`، Docker Desktop و ابزارهای امنیتی/driver لازم را نصب کن. Node فعلی میزبان v26.3.0 بود؛ نسخه LTS مورد تأیید پروژه در `engines` pin نشده و باید پیش از production تثبیت شود.
-2. اگر مخزن همچنان public است، آن را clone کن؛ اگر Private شد، با حساب GitHub دارای دسترسی وارد شو. سپس `npm ci`.
-3. PostgreSQL 16 container و named volume بساز/به volume مهاجرت‌یافته متصل کن. در نصب مشاهده‌شده port DB فقط loopback بود؛ همان سیاست را حفظ کن. مشخصات دیتابیس باید با `DATABASE_URL` جدید سازگار باشند.
+2. از PowerShell در پوشه مقصد: `git clone --branch main https://github.com/mohseniamin64-cmd/Accountant.git diaco-accounting` و `Set-Location .\diaco-accounting`; اگر مخزن Private شده، قبلش با حساب مجاز authenticate کن. سپس `npm ci`.
+3. PostgreSQL 16 container و named volume بساز/به volume مهاجرت‌یافته متصل کن. نصب مشاهده‌شده `POSTGRES_DB=diaco`, volume `diaco-postgres-data`, bind loopback 5432 داشت؛ user/password را از منبع امن بگیر، نه GitHub. نمونه ساخت container: `docker volume create diaco-postgres-data` و سپس `docker run -d --name diaco-postgres --restart unless-stopped --env-file <protected-env-file-outside-Git> -p 127.0.0.1:5432:5432 -v diaco-postgres-data:/var/lib/postgresql/data postgres:16-alpine`. آن env file محلی باید `POSTGRES_DB=diaco`, `POSTGRES_USER` و `POSTGRES_PASSWORD` را داشته باشد؛ ACL ویندوز را محدود کن و فایل را در Git یا command history ننویس. در نصب مشاهده‌شده همین port فقط loopback بود؛ آن را به LAN باز نکن.
 4. `.env` محلی را از مقادیر منبع امن بازسازی کن (نام متغیرها در [ENVIRONMENT.md](ENVIRONMENT.md)). `DATABASE_URL`, encryption key، port و upload/backup paths را دوباره تنظیم کن.
 5. `npm run build` و سپس `npm start`. شروع، migrationهای عقب‌مانده را می‌سنجد/اعمال می‌کند؛ اول روی DB بازیابی‌شده‌ی آزمون‌شده.
 6. بازیابی archive encrypted: رمزگشایی AES-256-GCM با کلید اصلی و restore custom-format dump به یک database خالی. در حال حاضر برنامه خودکار این کار را انجام نمی‌دهد؛ از helper/script تأییدشده پس از ساخت/آزمون استفاده شود. روی DB عملیاتی با `--clean` یا overwrite کار نکن.
-7. `data/uploads` را به مسیر تنظیم‌شده برگردان. login، تعداد/سند نمونه، تصویر/پیوست، گردش خرید/فروش read-only، health و backup+verify تازه را کنترل کن.
+7. `data/uploads` را به مسیر تنظیم‌شده برگردان. login، تعداد/سند نمونه، تصویر/پیوست، گردش خرید/فروش read-only، `http://localhost:5000/api/health` و backup+verify تازه را کنترل کن.
 8. سپس IP/firewall و URLهای کلاینت را تست کن، نشست‌های قدیمی را احیا نکن، و کاربرها را برای ورود مجدد مطلع کن.
 
 ## بازیابی از صفر

@@ -18,6 +18,9 @@ Browser -> HTTP(S) / Express -> middleware -> API modules -> PostgreSQL / filesy
 - start-production.mjs پیش‌فرض PORT=5000 دارد؛ Express روی 0.0.0.0 listen می‌کند.
 - مقدار PORT می‌تواند override شود.
 - دامنه، IP عمومی، tunnel، reverse proxy، DNS و سرویس اجرای Windows هنوز ثبت/تأیید نشده‌اند.
+- وضعیت میدانی 2026-09-25: Docker `diaco-postgres` از `postgres:16-alpine` با restart=`unless-stopped`، network bridge، bind فقط `127.0.0.1:5432` و named volume `diaco-postgres-data` روی `/var/lib/postgresql/data` روشن بود. volume source داخل Docker engine به `/var/lib/docker/volumes/diaco-postgres-data/_data` می‌رسید.
+- در همان snapshot، app روی 3000، 4173 یا 5000 listener نداشت؛ Node v26.3.0/npm 11.16.0 نصب بود. این مشاهده نصب‌های دیگر را توصیف نمی‌کند.
+- یک container `n8n` با پورت 5678 هم بود؛ ارتباطش با دیاکو، volume و اهمیت بازیابی آن هنوز از مالک تأیید نشده.
 
 ## دیتابیس
 

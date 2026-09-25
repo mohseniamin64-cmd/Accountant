@@ -5,7 +5,7 @@
 1. وضعیت PostgreSQL و دسترسی پورت را بررسی کنید.
 2. environment محلی را از منبع امن بارگذاری کنید.
 3. npm run lint و npm test را در تغییرات مهم اجرا کنید.
-4. health endpoint را از host و یک client شبکه تست کنید.
+4. `http://localhost:5000/api/health` را از host و client شبکه تست کنید؛ این endpoint اتصال DB را با SELECT 1 می‌سنجد.
 5. ورود، یک عملیات کم‌خطر، audit و logout را smoke test کنید.
 6. آخرین backup و ظرفیت دیسک مقصد را بررسی کنید.
 
